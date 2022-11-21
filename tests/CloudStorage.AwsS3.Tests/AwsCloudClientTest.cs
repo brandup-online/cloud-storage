@@ -16,27 +16,25 @@ namespace BrandUp.CloudStorage.AwsS3.Tests
         }
 
         [Fact]
-        public Task Success_FromDI()
+        public async Task Success_FromDI()
         {
             using var stream = new MemoryStream(Properties.Resources.Image);
             using var client = Services.GetRequiredService<ICloudClient<FakeFile>>();
 
             Assert.NotNull(client);
 
-            return Task.CompletedTask;
-            //await DoCRUD(client, new FakeFile { FakeGuid = Guid.NewGuid(), FakeString = "string" }, stream);
+            await DoCRUD(client, new FakeFile { FakeGuid = Guid.NewGuid(), FakeString = "string" }, stream);
         }
 
         [Fact]
-        public Task Success_FromStorage()
+        public async Task Success_FromStorage()
         {
             using var stream = new MemoryStream(Properties.Resources.Image);
             using var client = storage.CreateClient<FakeFile>();
 
             Assert.NotNull(client);
 
-            return Task.CompletedTask;
-            //await DoCRUD(client, new FakeFile { FakeGuid = Guid.NewGuid(), FakeString = "string" }, stream);
+            await DoCRUD(client, new FakeFile { FakeGuid = Guid.NewGuid(), FakeString = "string" }, stream);
         }
 
         async Task DoCRUD<T>(ICloudClient<T> client, T metadata, Stream stream) where T : class, IFileMetadata, new()
