@@ -1,13 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
+	  <TargetFramework>net7.0</TargetFramework>
+	  <Authors>Dmitry Shashev</Authors>
+	  <Company>BrandUp.online</Company>
+	  <Product>BrandUp.CloudStorage</Product>
+	  <RepositoryUrl>https://github.com/brandup-online/cloud-storage</RepositoryUrl>
+	  <PackageProjectUrl>https://github.com/brandup-online/cloud-storage</PackageProjectUrl>
+      
+	  <ImplicitUsings>enable</ImplicitUsings>
+      <Nullable>disable</Nullable>
 
-    <IsPackable>false</IsPackable>
+      <IsPackable>false</IsPackable>
 
-    <UserSecretsId>146da846-5530-42fb-a0b1-1d0ca5de5bd5</UserSecretsId>
+      <UserSecretsId>146da846-5530-42fb-a0b1-1d0ca5de5bd5</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
