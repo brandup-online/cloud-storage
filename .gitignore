@@ -330,4 +330,4 @@ ASALocalRun/
 .mfractor/
  
 # Test appsettings.json 
-CloudStorage.AwsS3.Tests/appsettings.test.json
+tests/**/appsettings.test.json

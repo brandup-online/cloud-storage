@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudStorage.Core", "CloudStorage.Core\CloudStorage.Core.csproj", "{903C8F0B-0DC8-42D0-BB6B-4DFCE8101DF8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.CloudStorage", "CloudStorage.Core\BrandUp.CloudStorage.csproj", "{903C8F0B-0DC8-42D0-BB6B-4DFCE8101DF8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudStorage.AwsS3", "CloudStorage.AwsS3\CloudStorage.AwsS3.csproj", "{3F9E18AF-024F-4E15-9388-2587856D1E94}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.CloudStorage.AwsS3", "CloudStorage.AwsS3\BrandUp.CloudStorage.AwsS3.csproj", "{3F9E18AF-024F-4E15-9388-2587856D1E94}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudStorage.AwsS3.Tests", "CloudStorage.AwsS3.Tests\CloudStorage.AwsS3.Tests.csproj", "{65FA82CC-A24E-443F-947D-690A7A30EB2F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.CloudStorage.AwsS3.Tests", "CloudStorage.AwsS3.Tests\BrandUp.CloudStorage.AwsS3.Tests.csproj", "{65FA82CC-A24E-443F-947D-690A7A30EB2F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{DE708390-4C9C-493F-AA34-F297E7EA425B}"
 EndProject
