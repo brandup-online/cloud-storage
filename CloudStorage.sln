@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudStorage.Core", "CloudStorage.Core\CloudStorage.Core.csproj", "{903C8F0B-0DC8-42D0-BB6B-4DFCE8101DF8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudStorage.AwsS3", "CloudStorage.AwsS3\CloudStorage.AwsS3.csproj", "{3F9E18AF-024F-4E15-9388-2587856D1E94}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudStorage.AwsS3.Tests", "CloudStorage.AwsS3.Tests\CloudStorage.AwsS3.Tests.csproj", "{65FA82CC-A24E-443F-947D-690A7A30EB2F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{903C8F0B-0DC8-42D0-BB6B-4DFCE8101DF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{903C8F0B-0DC8-42D0-BB6B-4DFCE8101DF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{903C8F0B-0DC8-42D0-BB6B-4DFCE8101DF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{903C8F0B-0DC8-42D0-BB6B-4DFCE8101DF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F9E18AF-024F-4E15-9388-2587856D1E94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F9E18AF-024F-4E15-9388-2587856D1E94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F9E18AF-024F-4E15-9388-2587856D1E94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F9E18AF-024F-4E15-9388-2587856D1E94}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65FA82CC-A24E-443F-947D-690A7A30EB2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65FA82CC-A24E-443F-947D-690A7A30EB2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65FA82CC-A24E-443F-947D-690A7A30EB2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65FA82CC-A24E-443F-947D-690A7A30EB2F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {34152893-6A53-4557-8E50-CE9C0C9549E1}
+	EndGlobalSection
+EndGlobal
