@@ -36,7 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CloudStorage.AwsS3\BrandUp.CloudStorage.AwsS3.csproj" />
+    <ProjectReference Include="..\..\src\CloudStorage.AwsS3\BrandUp.CloudStorage.AwsS3.csproj" />
   </ItemGroup>
 
   <ItemGroup>
