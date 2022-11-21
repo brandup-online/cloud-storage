@@ -19,7 +19,7 @@ namespace BrandUp.CloudStorage.AwsS3.Tests
             services.AddLogging();
 
             var config = new ConfigurationBuilder()
-               .AddJsonFile("appsettings.test.json")
+               .AddJsonFile("appsettings.test.json", true)
                .AddEnvironmentVariables()
                .Build();
 
