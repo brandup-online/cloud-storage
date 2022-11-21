@@ -19,12 +19,13 @@ namespace BrandUp.CloudStorage.AwsS3.Tests
             services.AddLogging();
 
             var config = new ConfigurationBuilder()
-               .AddJsonFile("appsettings.json", false)
+               .AddUserSecrets(typeof(CloudStorageTestBase).Assembly)
                .AddJsonFile("appsettings.test.json", true)
                .AddEnvironmentVariables()
                .Build();
 
             services.AddAwsS3Builder()
+
                 .AddAwsCloudStorage(config.GetSection("TestStorage"))
                 .AddClient<FakeFile>();
 
