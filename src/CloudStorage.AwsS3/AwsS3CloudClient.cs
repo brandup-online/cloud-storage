@@ -52,6 +52,10 @@ namespace BrandUp.CloudStorage.AwsS3
         #region ICloudStorage members
         public async Task<FileInfo<TMetadata>> UploadFileAsync(Guid fileId, TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
         {
+            foreach (var property in metadataProperties)
+                if (property.GetValue(fileInfo) == null)
+                    throw new InvalidOperationException(property.Name);
+
             using var ms = new MemoryStream();
             await fileStream.CopyToAsync(ms, cancellationToken);
             ms.Seek(0, SeekOrigin.Begin);
