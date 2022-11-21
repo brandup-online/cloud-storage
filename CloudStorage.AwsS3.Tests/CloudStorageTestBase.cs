@@ -18,22 +18,12 @@ namespace CloudStorage.AwsS3.Tests
             var services = new ServiceCollection();
             services.AddLogging();
 
-            var myConfiguration = new Dictionary<string, string>()
-            {
-                {"Default:ServiceUrl", "***Your Link***"},
-                {"Default:AuthenticationRegion", "***Your Region***"},
-                {"Default:AccessKeyId", "***Your Key***"},
-                {"Default:SecretAccessKey", "***Your Secret***"},
-
-                {"FakeFile:BucketName", "***Your Bucket***"},
-            };
-
-            var configuration = new ConfigurationBuilder()
-                            .AddInMemoryCollection(myConfiguration)
-                            .Build();
+            var config = new ConfigurationBuilder()
+               .AddJsonFile("appsettings.test.json")
+               .Build();
 
             services.AddAwsS3Builder()
-                .AddAwsCloudStorage(configuration)
+                .AddAwsCloudStorage(config.GetSection("TestStorage"))
                 .AddClient<FakeFile>();
 
             OnConfigure(services);
