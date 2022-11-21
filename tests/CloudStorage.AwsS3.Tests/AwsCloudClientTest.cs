@@ -44,6 +44,16 @@ namespace BrandUp.CloudStorage.AwsS3.Tests
 
             var getFileinfo = await client.GetFileInfoAsync(fileinfo.FileId, CancellationToken.None);
             Assert.NotNull(getFileinfo);
+
+            var inputMetadata = metadata as FakeFile;
+            var downloadedMetadata = getFileinfo.Metadata as FakeFile;
+            Assert.Equal(inputMetadata.FakeBool, downloadedMetadata.FakeBool);
+            Assert.Equal(inputMetadata.FakeString, downloadedMetadata.FakeString);
+            Assert.Equal(inputMetadata.FakeDateTime, downloadedMetadata.FakeDateTime);
+            Assert.Equal(inputMetadata.FakeInt, downloadedMetadata.FakeInt);
+            Assert.Equal(inputMetadata.FakeTimeSpan, downloadedMetadata.FakeTimeSpan);
+            Assert.Equal(inputMetadata.FakeGuid, downloadedMetadata.FakeGuid);
+
             Assert.Equal(stream.Length, getFileinfo.Size);
 
             using var downlodadedStream = await client.ReadFileAsync(fileinfo.FileId, CancellationToken.None);

@@ -4,9 +4,11 @@ using Amazon.S3.Transfer;
 using BrandUp.CloudStorage.AwsS3.Configuration;
 using BrandUp.CloudStorage.AwsS3.Context;
 using BrandUp.CloudStorage.Client;
+using BrandUp.CloudStorage.Exceptions;
 using BrandUp.CloudStorage.Models;
 using BrandUp.CloudStorage.Models.Interfaces;
 using Microsoft.Extensions.Options;
+using System.ComponentModel;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
@@ -50,6 +52,7 @@ namespace BrandUp.CloudStorage.AwsS3
         }
 
         #region ICloudStorage members
+
         public async Task<FileInfo<TMetadata>> UploadFileAsync(Guid fileId, TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
         {
             foreach (var property in metadataProperties)
@@ -86,18 +89,27 @@ namespace BrandUp.CloudStorage.AwsS3
             }
             catch (AmazonS3Exception ex)
             {
-                throw ex;
-                //throw ex.StatusCode switch
-                //{
-                //    System.Net.HttpStatusCode.Forbidden => new YandexCloudAccessDeniedException(ex),
-                //    _ => new YandexCloudIntegrationException(ex),
-                //};
+                throw ex.StatusCode switch
+                {
+                    System.Net.HttpStatusCode.Forbidden => new AccessDeniedException(ex),
+                    _ => new IntegrationException(ex),
+                };
             }
         }
 
-        public async Task<FileInfo<TMetadata>> UploadFileAsync(TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
+        public Task<FileInfo<TMetadata>> UploadFileAsync(TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
         {
-            return await UploadFileAsync(Guid.NewGuid(), fileInfo, fileStream, cancellationToken);
+            return UploadFileAsync(Guid.NewGuid(), fileInfo, fileStream, cancellationToken);
+        }
+
+        public Task<FileInfo<TMetadata>> UploadFileAsync(Guid fileId, Stream fileStream, CancellationToken cancellationToken = default)
+        {
+            return UploadFileAsync(fileId, new TMetadata(), fileStream, cancellationToken);
+        }
+
+        public Task<FileInfo<TMetadata>> UploadFileAsync(Stream fileStream, CancellationToken cancellationToken = default)
+        {
+            return UploadFileAsync(new TMetadata(), fileStream, cancellationToken);
         }
 
 
@@ -116,13 +128,12 @@ namespace BrandUp.CloudStorage.AwsS3
             }
             catch (AmazonS3Exception ex)
             {
-                throw ex;
-                //return ex.StatusCode switch
-                //{
-                //    System.Net.HttpStatusCode.NotFound => null,
-                //    System.Net.HttpStatusCode.Forbidden => throw new YandexCloudAccessDeniedException(ex),
-                //    _ => throw new YandexCloudIntegrationException(ex)
-                //};
+                return ex.StatusCode switch
+                {
+                    System.Net.HttpStatusCode.NotFound => null,
+                    System.Net.HttpStatusCode.Forbidden => throw new AccessDeniedException(ex),
+                    _ => throw new IntegrationException(ex)
+                };
             }
         }
 
@@ -140,13 +151,12 @@ namespace BrandUp.CloudStorage.AwsS3
             }
             catch (AmazonS3Exception ex)
             {
-                throw ex;
-                //return ex.StatusCode switch
-                //{
-                //    System.Net.HttpStatusCode.NotFound => null,
-                //    System.Net.HttpStatusCode.Forbidden => throw new YandexCloudAccessDeniedException(ex),
-                //    _ => throw new YandexCloudIntegrationException(ex)
-                //};
+                return ex.StatusCode switch
+                {
+                    System.Net.HttpStatusCode.NotFound => null,
+                    System.Net.HttpStatusCode.Forbidden => throw new AccessDeniedException(ex),
+                    _ => throw new IntegrationException(ex)
+                };
             }
         }
 
@@ -164,13 +174,12 @@ namespace BrandUp.CloudStorage.AwsS3
             }
             catch (AmazonS3Exception ex)
             {
-                throw ex;
-                //return ex.StatusCode switch
-                //{
-                //    System.Net.HttpStatusCode.NotFound => false,
-                //    System.Net.HttpStatusCode.Forbidden => false,
-                //    _ => throw new YandexCloudIntegrationException(ex)
-                //};
+                return ex.StatusCode switch
+                {
+                    System.Net.HttpStatusCode.NotFound => false,
+                    System.Net.HttpStatusCode.Forbidden => false,
+                    _ => throw new IntegrationException(ex)
+                };
             }
         }
 
@@ -199,13 +208,16 @@ namespace BrandUp.CloudStorage.AwsS3
 
             foreach (var property in metadataProperties)
             {
+                var converter = TypeDescriptor.GetConverter(property.PropertyType);
+
                 if (property.PropertyType == typeof(string))
                     property.SetValue(fileMetadata, DecodeFileName(response.Metadata[metadataKey + "-" + ToKebabCase(property.Name)]));
-                else if (property.PropertyType == typeof(Guid))
-                    property.SetValue(fileMetadata, Guid.Parse(response.Metadata[metadataKey + "-" + ToKebabCase(property.Name)]));
+                else
+                    property.SetValue(fileMetadata, converter.ConvertFrom(response.Metadata[metadataKey + "-" + ToKebabCase(property.Name)]));
             }
 
             return new Models.FileInfo<TMetadata> { Metadata = fileMetadata, Size = response.ContentLength, FileId = fileId };
+
         }
 
         static string EncodeFileName(string fileName)
