@@ -1,11 +1,7 @@
-﻿using BrandUp.CloudStorage.Models;
-using BrandUp.CloudStorage.Models.Interfaces;
-
-namespace BrandUp.CloudStorage.Client
+﻿namespace BrandUp.CloudStorage
 {
-    public interface ICloudClient<TMetadata> : IDisposable where TMetadata : class, IFileMetadata, new()
+    public interface ICloudClient<TMetadata> : IDisposable where TMetadata : class, new()
     {
-
         public Task<FileInfo<TMetadata>> UploadFileAsync(TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default);
         public Task<FileInfo<TMetadata>> UploadFileAsync(Guid fileId, TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default);
         public Task<FileInfo<TMetadata>> UploadFileAsync(Guid fileId, Stream fileStream, CancellationToken cancellationToken = default);

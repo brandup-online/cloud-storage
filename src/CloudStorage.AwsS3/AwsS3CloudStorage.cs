@@ -1,11 +1,8 @@
-﻿using BrandUp.CloudStorage.Client;
-using BrandUp.CloudStorage.Models.Interfaces;
-using BrandUp.CloudStorage.Storage;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace BrandUp.CloudStorage.AwsS3
 {
-    public class AwsS3CloudStorage : ICloudStorage
+    public class AwsS3CloudStorage : ICloudClientFactory
     {
         readonly IServiceProvider serviceProvider;
 
@@ -14,7 +11,7 @@ namespace BrandUp.CloudStorage.AwsS3
             this.serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         }
 
-        public ICloudClient<TFileType> CreateClient<TFileType>() where TFileType : class, IFileMetadata, new()
+        public ICloudClient<TFileType> CreateClient<TFileType>() where TFileType : class, new()
             => serviceProvider.GetRequiredService<ICloudClient<TFileType>>();
     }
 }

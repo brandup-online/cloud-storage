@@ -3,10 +3,7 @@ using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 using BrandUp.CloudStorage.AwsS3.Configuration;
 using BrandUp.CloudStorage.AwsS3.Context;
-using BrandUp.CloudStorage.Client;
 using BrandUp.CloudStorage.Exceptions;
-using BrandUp.CloudStorage.Models;
-using BrandUp.CloudStorage.Models.Interfaces;
 using Microsoft.Extensions.Options;
 using System.ComponentModel;
 using System.Reflection;
@@ -14,7 +11,7 @@ using System.Text.RegularExpressions;
 
 namespace BrandUp.CloudStorage.AwsS3
 {
-    public class AwsS3CloudClient<TMetadata> : ICloudClient<TMetadata> where TMetadata : class, IFileMetadata, new()
+    public class AwsS3CloudClient<TMetadata> : ICloudClient<TMetadata> where TMetadata : class, new()
     {
         readonly AwsS3Config options;
         readonly AmazonS3Client client;
@@ -22,11 +19,11 @@ namespace BrandUp.CloudStorage.AwsS3
         private bool isDisposed;
 
         const string metadataKey = "X-Amz-Meta";
-        private PropertyInfo[] metadataProperties;
+        readonly PropertyInfo[] metadataProperties;
 
         public AwsS3CloudClient(IOptions<AwsS3Config> options, IAwsS3StorageContext storageContext)
         {
-            this.options = options.Value ?? throw new ArgumentNullException(nameof(options.Value));
+            this.options = options?.Value ?? throw new ArgumentNullException(nameof(options));
             metadataProperties = storageContext.TypeMetaData[typeof(TMetadata)];
 
             if (storageContext.BucketConfigs.TryGetValue(typeof(TMetadata), out var bucketConfig))
@@ -216,7 +213,7 @@ namespace BrandUp.CloudStorage.AwsS3
                     property.SetValue(fileMetadata, converter.ConvertFrom(response.Metadata[metadataKey + "-" + ToKebabCase(property.Name)]));
             }
 
-            return new Models.FileInfo<TMetadata> { Metadata = fileMetadata, Size = response.ContentLength, FileId = fileId };
+            return new FileInfo<TMetadata> { Metadata = fileMetadata, Size = response.ContentLength, FileId = fileId };
 
         }
 

@@ -1,8 +1,6 @@
-﻿using BrandUp.CloudStorage.Files.Interfaces;
-
-namespace BrandUp.CloudStorage.AwsS3.Configuration
+﻿namespace BrandUp.CloudStorage.AwsS3.Configuration
 {
-    public class AwsS3Config : IStorageConfig
+    public class AwsS3Config
     {
         public string ServiceUrl { get; set; }
         public string AuthenticationRegion { get; set; }

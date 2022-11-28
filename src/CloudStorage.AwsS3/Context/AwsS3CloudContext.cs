@@ -1,5 +1,4 @@
 ﻿using BrandUp.CloudStorage.AwsS3.Configuration;
-using BrandUp.CloudStorage.Models.Interfaces;
 using Microsoft.Extensions.Configuration;
 using System.Reflection;
 
@@ -10,12 +9,11 @@ namespace BrandUp.CloudStorage.AwsS3.Context
         readonly Dictionary<Type, AwsS3Config> bucketConfigs = new();
         readonly Dictionary<Type, PropertyInfo[]> typeMetaData = new();
         readonly List<Type> bucketTypes = new();
-
         readonly IConfiguration configuration;
 
         public AwsS3CloudContext(IConfiguration configuration)
         {
-            this.configuration = configuration ?? throw new ArgumentNullException();
+            this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
         #region IAwsS3CloudContext members
@@ -26,7 +24,7 @@ namespace BrandUp.CloudStorage.AwsS3.Context
 
         public IList<Type> BucketTypes => bucketTypes;
 
-        public void AddClientType<T>() where T : IFileMetadata
+        public void AddClientType<T>() where T : class
         {
             bucketTypes.Add(typeof(T));
             var properties = typeof(T).GetProperties();
@@ -36,15 +34,12 @@ namespace BrandUp.CloudStorage.AwsS3.Context
             if (options != null)
             {
                 if (!bucketConfigs.TryAdd(typeof(T), options))
-                {
                     throw new ArgumentException($"Для типа {typeof(T)} уже сущесвует конфигурация");
-                }
             }
         }
 
         #endregion
     }
-
 
     public interface IAwsS3StorageContext
     {
@@ -53,6 +48,6 @@ namespace BrandUp.CloudStorage.AwsS3.Context
 
         IList<Type> BucketTypes { get; }
 
-        void AddClientType<T>() where T : IFileMetadata;
+        void AddClientType<T>() where T : class;
     }
 }

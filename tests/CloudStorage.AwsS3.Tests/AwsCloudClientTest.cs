@@ -1,18 +1,15 @@
 using BrandUp.CloudStorage.AwsS3.Tests._fakes;
-using BrandUp.CloudStorage.Client;
-using BrandUp.CloudStorage.Models.Interfaces;
-using BrandUp.CloudStorage.Storage;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BrandUp.CloudStorage.AwsS3.Tests
 {
     public class AwsCloudClientTest : CloudStorageTestBase
     {
-        readonly ICloudStorage storage;
+        readonly ICloudClientFactory storage;
 
         public AwsCloudClientTest()
         {
-            storage = Services.GetRequiredService<ICloudStorage>();
+            storage = Services.GetRequiredService<ICloudClientFactory>();
         }
 
         [Fact]
@@ -37,7 +34,7 @@ namespace BrandUp.CloudStorage.AwsS3.Tests
             await DoCRUD(client, new FakeFile { FakeGuid = Guid.NewGuid(), FakeString = "string" }, stream);
         }
 
-        async Task DoCRUD<T>(ICloudClient<T> client, T metadata, Stream stream) where T : class, IFileMetadata, new()
+        async Task DoCRUD<T>(ICloudClient<T> client, T metadata, Stream stream) where T : class, new()
         {
             var fileinfo = await client.UploadFileAsync(metadata, stream, CancellationToken.None);
             Assert.NotNull(fileinfo);

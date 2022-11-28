@@ -1,9 +1,6 @@
 ﻿using BrandUp.CloudStorage.AwsS3.Configuration;
 using BrandUp.CloudStorage.AwsS3.Context;
-using BrandUp.CloudStorage.Client;
-using BrandUp.CloudStorage.Extensions;
-using BrandUp.CloudStorage.Models.Interfaces;
-using BrandUp.CloudStorage.Storage;
+using BrandUp.CloudStorage.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,14 +24,13 @@ namespace BrandUp.CloudStorage.AwsS3
 
             Services.AddSingleton<IAwsS3StorageContext>(context);
 
-            Services.AddSingleton<ICloudStorage, AwsS3CloudStorage>();
+            Services.AddSingleton<ICloudClientFactory, AwsS3CloudStorage>();
 
             return this;
         }
 
-        public AwsS3CloudStorageBuilder AddClient<T>() where T : class, IFileMetadata, new()
+        public AwsS3CloudStorageBuilder AddClient<T>() where T : class, new()
         {
-
             context.AddClientType<T>();
 
             Services.AddTransient<ICloudClient<T>, AwsS3CloudClient<T>>();

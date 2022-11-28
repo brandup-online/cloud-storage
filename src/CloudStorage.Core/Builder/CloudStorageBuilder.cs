@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace BrandUp.CloudStorage.Extensions
+namespace BrandUp.CloudStorage.Builder
 {
     public class CloudStorageBuilder : ICloudStorageBuilder
     {
