@@ -7,11 +7,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{DE708390-4C9
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{5B333CFD-BF9C-480F-B69E-E608542CD316}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.AwsS3", "src\CloudStorage.AwsS3\BrandUp.FileStorage.AwsS3.csproj", "{175BC628-5C3B-410A-9096-9E28D67E1546}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage", "src\BrandUp.FileStorage\BrandUp.FileStorage.csproj", "{80F4EEBC-3354-4549-8A74-333AC8DC6464}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage", "src\CloudStorage.Core\BrandUp.FileStorage.csproj", "{C57C635A-B423-46E2-ADDE-C0FB960C5BE1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.AwsS3", "src\BrandUp.FileStorage.AwsS3\BrandUp.FileStorage.AwsS3.csproj", "{8EFCF8A7-DF2D-4EAC-B0CB-5ED85DFE0875}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.AwsS3.Tests", "tests\CloudStorage.AwsS3.Tests\BrandUp.FileStorage.AwsS3.Tests.csproj", "{4712846A-4184-4CE8-B1FF-4E67DE0F87A5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.AwsS3.Tests", "tests\BrandUp.FileStorage.AwsS3.Tests\BrandUp.FileStorage.AwsS3.Tests.csproj", "{2C032012-B340-45CC-87C3-0CE461E7EE47}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,26 +19,26 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{175BC628-5C3B-410A-9096-9E28D67E1546}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{175BC628-5C3B-410A-9096-9E28D67E1546}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{175BC628-5C3B-410A-9096-9E28D67E1546}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{175BC628-5C3B-410A-9096-9E28D67E1546}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C57C635A-B423-46E2-ADDE-C0FB960C5BE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C57C635A-B423-46E2-ADDE-C0FB960C5BE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C57C635A-B423-46E2-ADDE-C0FB960C5BE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C57C635A-B423-46E2-ADDE-C0FB960C5BE1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4712846A-4184-4CE8-B1FF-4E67DE0F87A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4712846A-4184-4CE8-B1FF-4E67DE0F87A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4712846A-4184-4CE8-B1FF-4E67DE0F87A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4712846A-4184-4CE8-B1FF-4E67DE0F87A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80F4EEBC-3354-4549-8A74-333AC8DC6464}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80F4EEBC-3354-4549-8A74-333AC8DC6464}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80F4EEBC-3354-4549-8A74-333AC8DC6464}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80F4EEBC-3354-4549-8A74-333AC8DC6464}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EFCF8A7-DF2D-4EAC-B0CB-5ED85DFE0875}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EFCF8A7-DF2D-4EAC-B0CB-5ED85DFE0875}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EFCF8A7-DF2D-4EAC-B0CB-5ED85DFE0875}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EFCF8A7-DF2D-4EAC-B0CB-5ED85DFE0875}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C032012-B340-45CC-87C3-0CE461E7EE47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C032012-B340-45CC-87C3-0CE461E7EE47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C032012-B340-45CC-87C3-0CE461E7EE47}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C032012-B340-45CC-87C3-0CE461E7EE47}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{175BC628-5C3B-410A-9096-9E28D67E1546} = {DE708390-4C9C-493F-AA34-F297E7EA425B}
-		{C57C635A-B423-46E2-ADDE-C0FB960C5BE1} = {DE708390-4C9C-493F-AA34-F297E7EA425B}
-		{4712846A-4184-4CE8-B1FF-4E67DE0F87A5} = {5B333CFD-BF9C-480F-B69E-E608542CD316}
+		{80F4EEBC-3354-4549-8A74-333AC8DC6464} = {DE708390-4C9C-493F-AA34-F297E7EA425B}
+		{8EFCF8A7-DF2D-4EAC-B0CB-5ED85DFE0875} = {DE708390-4C9C-493F-AA34-F297E7EA425B}
+		{2C032012-B340-45CC-87C3-0CE461E7EE47} = {5B333CFD-BF9C-480F-B69E-E608542CD316}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {34152893-6A53-4557-8E50-CE9C0C9549E1}
