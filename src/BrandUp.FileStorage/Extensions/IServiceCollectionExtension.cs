@@ -5,12 +5,12 @@ namespace BrandUp.FileStorage
 {
     public static class IServiceCollectionExtension
     {
-        public static CloudStorageBuilder AddCloudStorage(this IServiceCollection services)
+        public static FileStorageBuilder AddFileStorage(this IServiceCollection services)
         {
             if (services == null)
                 throw new ArgumentNullException(nameof(services));
 
-            return new CloudStorageBuilder(services);
+            return new FileStorageBuilder(services);
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace BrandUp.FileStorage
 {
-    public interface ICloudClient<TMetadata> : IDisposable where TMetadata : class, new()
+    public interface IFileStorage<TMetadata> : IDisposable where TMetadata : class, new()
     {
         public Task<FileInfo<TMetadata>> UploadFileAsync(TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default);
         public Task<FileInfo<TMetadata>> UploadFileAsync(Guid fileId, TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default);

@@ -1,6 +1,6 @@
 ﻿namespace BrandUp.FileStorage.AwsS3.Configuration
 {
-    public class AwsS3Config
+    public class AwsS3Configuration
     {
         public string ServiceUrl { get; set; }
         public string AuthenticationRegion { get; set; }

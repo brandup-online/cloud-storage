@@ -5,36 +5,25 @@ namespace BrandUp.FileStorage.AwsS3.Tests
 {
     public class AwsCloudClientTest : CloudStorageTestBase
     {
-        readonly ICloudClientFactory storage;
+        readonly IFileStorageFactory storage;
 
         public AwsCloudClientTest()
         {
-            storage = Services.GetRequiredService<ICloudClientFactory>();
-        }
-
-        [Fact]
-        public async Task Success_FromDI()
-        {
-            using var stream = new MemoryStream(Properties.Resources.Image);
-            using var client = Services.GetRequiredService<ICloudClient<FakeFile>>();
-
-            Assert.NotNull(client);
-
-            await DoCRUD(client, new FakeFile { FakeGuid = Guid.NewGuid(), FakeString = "string" }, stream);
+            storage = Services.GetRequiredService<IFileStorageFactory>();
         }
 
         [Fact]
         public async Task Success_FromStorage()
         {
             using var stream = new MemoryStream(Properties.Resources.Image);
-            using var client = storage.CreateClient<FakeFile>();
+            using var client = storage.CreateAwsStorage<FakeFile>();
 
             Assert.NotNull(client);
 
             await DoCRUD(client, new FakeFile { FakeGuid = Guid.NewGuid(), FakeString = "string" }, stream);
         }
 
-        async Task DoCRUD<T>(ICloudClient<T> client, T metadata, Stream stream) where T : class, new()
+        async Task DoCRUD<T>(IFileStorage<T> client, T metadata, Stream stream) where T : class, new()
         {
             var fileinfo = await client.UploadFileAsync(metadata, stream, CancellationToken.None);
             Assert.NotNull(fileinfo);

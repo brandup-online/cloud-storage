@@ -2,43 +2,23 @@
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 using BrandUp.FileStorage.AwsS3.Configuration;
-using BrandUp.FileStorage.AwsS3.Context;
 using BrandUp.FileStorage.Exceptions;
-using Microsoft.Extensions.Options;
-using System.ComponentModel;
-using System.Reflection;
-using System.Text.RegularExpressions;
 
 namespace BrandUp.FileStorage.AwsS3
 {
-    public class AwsS3CloudClient<TMetadata> : ICloudClient<TMetadata> where TMetadata : class, new()
+    public class AwsS3FileStorage<TMetadata> : IFileStorage<TMetadata> where TMetadata : class, new()
     {
-        readonly AwsS3Config options;
+        readonly AwsS3Configuration options;
         readonly AmazonS3Client client;
 
         private bool isDisposed;
 
-        const string metadataKey = "X-Amz-Meta";
-        readonly PropertyInfo[] metadataProperties;
+        readonly IMetadataSerializer<TMetadata> metadataSerializer;
 
-        public AwsS3CloudClient(IOptions<AwsS3Config> options, IAwsS3StorageContext storageContext)
+        public AwsS3FileStorage(AwsS3Configuration options, IMetadataSerializer<TMetadata> metadataSerializer)
         {
-            this.options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-            metadataProperties = storageContext.TypeMetaData[typeof(TMetadata)];
-
-            if (storageContext.BucketConfigs.TryGetValue(typeof(TMetadata), out var bucketConfig))
-            {
-                if (bucketConfig.ServiceUrl != null)
-                    this.options.ServiceUrl = bucketConfig.ServiceUrl;
-                if (bucketConfig.AccessKeyId != null)
-                    this.options.AccessKeyId = bucketConfig.AccessKeyId;
-                if (bucketConfig.SecretAccessKey != null)
-                    this.options.SecretAccessKey = bucketConfig.SecretAccessKey;
-                if (bucketConfig.AuthenticationRegion != null)
-                    this.options.AuthenticationRegion = bucketConfig.AuthenticationRegion;
-                if (bucketConfig.BucketName != null)
-                    this.options.BucketName = bucketConfig.BucketName;
-            }
+            this.options = options ?? throw new ArgumentNullException(nameof(options));
+            this.metadataSerializer = metadataSerializer ?? throw new ArgumentNullException(nameof(metadataSerializer));
 
             client = new AmazonS3Client(this.options.AccessKeyId, this.options.SecretAccessKey,
                 new AmazonS3Config
@@ -48,14 +28,10 @@ namespace BrandUp.FileStorage.AwsS3
                 });
         }
 
-        #region ICloudStorage members
+        #region IFileStorage members
 
         public async Task<FileInfo<TMetadata>> UploadFileAsync(Guid fileId, TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
         {
-            foreach (var property in metadataProperties)
-                if (property.GetValue(fileInfo) == null)
-                    throw new InvalidOperationException(property.Name);
-
             using var ms = new MemoryStream();
             await fileStream.CopyToAsync(ms, cancellationToken);
             ms.Seek(0, SeekOrigin.Begin);
@@ -73,7 +49,7 @@ namespace BrandUp.FileStorage.AwsS3
                     InputStream = ms
                 };
 
-                var metadataDictionary = CreateMetadata(fileInfo);
+                var metadataDictionary = metadataSerializer.Serialize(fileInfo);
 
                 foreach (var pair in metadataDictionary)
                     transferUtilityUploadRequest.Metadata.Add(pair.Key, pair.Value);
@@ -121,7 +97,7 @@ namespace BrandUp.FileStorage.AwsS3
 
                 }, cancellationToken);
 
-                return GenerateFileInfoFromRespnse(fileId, response);
+                return metadataSerializer.Deserialize(fileId, response);
             }
             catch (AmazonS3Exception ex)
             {
@@ -183,68 +159,6 @@ namespace BrandUp.FileStorage.AwsS3
         #endregion
 
         #region Helpers
-
-        Dictionary<string, string> CreateMetadata(TMetadata fileInfo)
-        {
-            var metadata = new Dictionary<string, string>();
-
-            foreach (var property in metadataProperties)
-            {
-                if (property.PropertyType == typeof(string))
-                    metadata.Add(metadataKey + "-" + ToKebabCase(property.Name), EncodeFileName(property.GetValue(fileInfo).ToString()));
-                else
-                    metadata.Add(metadataKey + "-" + ToKebabCase(property.Name), property.GetValue(fileInfo).ToString());
-            }
-
-            return metadata;
-        }
-
-        FileInfo<TMetadata> GenerateFileInfoFromRespnse(Guid fileId, GetObjectMetadataResponse response)
-        {
-            var fileMetadata = new TMetadata();
-
-            foreach (var property in metadataProperties)
-            {
-                var converter = TypeDescriptor.GetConverter(property.PropertyType);
-
-                if (property.PropertyType == typeof(string))
-                    property.SetValue(fileMetadata, DecodeFileName(response.Metadata[metadataKey + "-" + ToKebabCase(property.Name)]));
-                else
-                    property.SetValue(fileMetadata, converter.ConvertFrom(response.Metadata[metadataKey + "-" + ToKebabCase(property.Name)]));
-            }
-
-            return new FileInfo<TMetadata> { Metadata = fileMetadata, Size = response.ContentLength, FileId = fileId };
-
-        }
-
-        static string EncodeFileName(string fileName)
-        {
-            if (fileName == null)
-                throw new ArgumentNullException(nameof(fileName));
-
-            return Convert.ToHexString(System.Text.Encoding.UTF8.GetBytes(fileName));
-        }
-        static string DecodeFileName(string encodedValue)
-        {
-            if (encodedValue == null)
-                throw new ArgumentNullException(nameof(encodedValue));
-
-            return System.Text.Encoding.UTF8.GetString(Convert.FromHexString(encodedValue));
-        }
-
-        static string ToKebabCase(string value)
-        {
-            if (string.IsNullOrEmpty(value))
-                return value;
-
-            return Regex.Replace(
-                value,
-                "(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z0-9])",
-                "-$1",
-                RegexOptions.Compiled)
-                .Trim();
-        }
-
         #endregion
 
         #region IDisposable members
