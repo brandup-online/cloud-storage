@@ -1,15 +1,15 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
-using BrandUp.CloudStorage.AwsS3.Configuration;
-using BrandUp.CloudStorage.AwsS3.Context;
-using BrandUp.CloudStorage.Exceptions;
+using BrandUp.FileStorage.AwsS3.Configuration;
+using BrandUp.FileStorage.AwsS3.Context;
+using BrandUp.FileStorage.Exceptions;
 using Microsoft.Extensions.Options;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace BrandUp.CloudStorage.AwsS3
+namespace BrandUp.FileStorage.AwsS3
 {
     public class AwsS3CloudClient<TMetadata> : ICloudClient<TMetadata> where TMetadata : class, new()
     {

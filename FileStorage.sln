@@ -7,11 +7,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{DE708390-4C9
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{5B333CFD-BF9C-480F-B69E-E608542CD316}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.CloudStorage.AwsS3", "src\CloudStorage.AwsS3\BrandUp.CloudStorage.AwsS3.csproj", "{175BC628-5C3B-410A-9096-9E28D67E1546}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.AwsS3", "src\CloudStorage.AwsS3\BrandUp.FileStorage.AwsS3.csproj", "{175BC628-5C3B-410A-9096-9E28D67E1546}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.CloudStorage", "src\CloudStorage.Core\BrandUp.CloudStorage.csproj", "{C57C635A-B423-46E2-ADDE-C0FB960C5BE1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage", "src\CloudStorage.Core\BrandUp.FileStorage.csproj", "{C57C635A-B423-46E2-ADDE-C0FB960C5BE1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.CloudStorage.AwsS3.Tests", "tests\CloudStorage.AwsS3.Tests\BrandUp.CloudStorage.AwsS3.Tests.csproj", "{4712846A-4184-4CE8-B1FF-4E67DE0F87A5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.AwsS3.Tests", "tests\CloudStorage.AwsS3.Tests\BrandUp.FileStorage.AwsS3.Tests.csproj", "{4712846A-4184-4CE8-B1FF-4E67DE0F87A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

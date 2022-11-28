@@ -1,4 +1,4 @@
-﻿namespace BrandUp.CloudStorage
+﻿namespace BrandUp.FileStorage
 {
     public interface ICloudClient<TMetadata> : IDisposable where TMetadata : class, new()
     {

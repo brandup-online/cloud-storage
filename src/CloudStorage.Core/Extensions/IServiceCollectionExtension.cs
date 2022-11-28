@@ -1,7 +1,7 @@
-﻿using BrandUp.CloudStorage.Builder;
+﻿using BrandUp.FileStorage.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BrandUp.CloudStorage
+namespace BrandUp.FileStorage
 {
     public static class IServiceCollectionExtension
     {

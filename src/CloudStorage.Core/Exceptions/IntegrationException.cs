@@ -1,6 +1,6 @@
 ﻿using Amazon.S3;
 
-namespace BrandUp.CloudStorage.Exceptions
+namespace BrandUp.FileStorage.Exceptions
 {
     public class IntegrationException : Exception
     {

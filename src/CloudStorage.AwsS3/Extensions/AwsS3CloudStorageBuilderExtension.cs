@@ -1,10 +1,10 @@
-﻿using BrandUp.CloudStorage.AwsS3.Configuration;
-using BrandUp.CloudStorage.AwsS3.Context;
-using BrandUp.CloudStorage.Builder;
+﻿using BrandUp.FileStorage.AwsS3.Configuration;
+using BrandUp.FileStorage.AwsS3.Context;
+using BrandUp.FileStorage.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BrandUp.CloudStorage.AwsS3
+namespace BrandUp.FileStorage.AwsS3
 {
     public static class IServiceCollectionExtension
     {

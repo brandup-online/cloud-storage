@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-	<ProjectReference Include="..\CloudStorage.Core\BrandUp.CloudStorage.csproj" />
+	<ProjectReference Include="..\CloudStorage.Core\BrandUp.FileStorage.csproj" />
   </ItemGroup>
 
 </Project>

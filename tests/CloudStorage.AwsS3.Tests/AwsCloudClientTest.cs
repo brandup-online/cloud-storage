@@ -1,7 +1,7 @@
-using BrandUp.CloudStorage.AwsS3.Tests._fakes;
+using BrandUp.FileStorage.AwsS3.Tests._fakes;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BrandUp.CloudStorage.AwsS3.Tests
+namespace BrandUp.FileStorage.AwsS3.Tests
 {
     public class AwsCloudClientTest : CloudStorageTestBase
     {

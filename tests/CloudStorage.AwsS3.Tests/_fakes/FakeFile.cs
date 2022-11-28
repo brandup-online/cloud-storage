@@ -1,4 +1,4 @@
-﻿namespace BrandUp.CloudStorage.AwsS3.Tests._fakes
+﻿namespace BrandUp.FileStorage.AwsS3.Tests._fakes
 {
     public class FakeFile
     {

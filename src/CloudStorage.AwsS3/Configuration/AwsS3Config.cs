@@ -1,4 +1,4 @@
-﻿namespace BrandUp.CloudStorage.AwsS3.Configuration
+﻿namespace BrandUp.FileStorage.AwsS3.Configuration
 {
     public class AwsS3Config
     {

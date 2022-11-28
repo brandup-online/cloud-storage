@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace BrandUp.CloudStorage.AwsS3.Tests.Properties {
+namespace BrandUp.FileStorage.AwsS3.Tests.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace BrandUp.CloudStorage.AwsS3.Tests.Properties {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("BrandUp.CloudStorage.AwsS3.Tests.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("BrandUp.FileStorage.AwsS3.Tests.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

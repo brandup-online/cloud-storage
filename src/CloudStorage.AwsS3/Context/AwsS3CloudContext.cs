@@ -1,8 +1,8 @@
-﻿using BrandUp.CloudStorage.AwsS3.Configuration;
+﻿using BrandUp.FileStorage.AwsS3.Configuration;
 using Microsoft.Extensions.Configuration;
 using System.Reflection;
 
-namespace BrandUp.CloudStorage.AwsS3.Context
+namespace BrandUp.FileStorage.AwsS3.Context
 {
     public class AwsS3CloudContext : IAwsS3StorageContext
     {

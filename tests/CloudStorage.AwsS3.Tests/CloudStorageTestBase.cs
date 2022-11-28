@@ -1,8 +1,8 @@
-﻿using BrandUp.CloudStorage.AwsS3.Tests._fakes;
+﻿using BrandUp.FileStorage.AwsS3.Tests._fakes;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BrandUp.CloudStorage.AwsS3.Tests
+namespace BrandUp.FileStorage.AwsS3.Tests
 {
     public abstract class CloudStorageTestBase : IAsyncLifetime
     {
@@ -23,11 +23,8 @@ namespace BrandUp.CloudStorage.AwsS3.Tests
                .AddEnvironmentVariables()
                .Build();
 
-            services
-                .AddCloudStorage()
-                .StoreFileByAws<FakeFile>();
-
             services.AddAwsS3Builder()
+
                 .AddAwsCloudStorage(config.GetSection("TestStorage"))
                 .AddClient<FakeFile>();
 
@@ -36,6 +33,7 @@ namespace BrandUp.CloudStorage.AwsS3.Tests
             rootServiceProvider = services.BuildServiceProvider();
             serviceScope = rootServiceProvider.CreateScope();
         }
+
 
         #region IAsyncLifetime region
 
