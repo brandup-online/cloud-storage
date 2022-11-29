@@ -1,9 +1,7 @@
-﻿using Amazon.S3;
-
-namespace BrandUp.FileStorage.Exceptions
+﻿namespace BrandUp.FileStorage.Exceptions
 {
     public class AccessDeniedException : Exception
     {
-        public AccessDeniedException(AmazonS3Exception innerException) : base("Access denied", innerException) { }
+        public AccessDeniedException(Exception innerException) : base("Access denied", innerException) { }
     }
 }

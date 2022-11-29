@@ -1,23 +1,23 @@
-using BrandUp.FileStorage.AwsS3;
+using BrandUp.FileStorage.Folder;
 using BrandUp.FileStorage.Tests._fakes;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BrandUp.FileStorage.Tests
 {
-    public class AwsCloudClientTest : FileStorageTestBase
+    public class FolderStorageTest : FileStorageTestBase
     {
         readonly IFileStorageFactory factory;
 
-        public AwsCloudClientTest()
+        public FolderStorageTest()
         {
             factory = Services.GetRequiredService<IFileStorageFactory>();
         }
 
         [Fact]
-        public async Task Success_FromStorage()
+        public async Task Success()
         {
             using var stream = new MemoryStream(Properties.Resources.Image);
-            using var client = factory.CreateAwsStorage<FakeFile>();
+            using var client = factory.CreateFolderStorage<FakeFile>();
 
             Assert.NotNull(client);
 

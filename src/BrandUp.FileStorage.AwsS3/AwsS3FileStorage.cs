@@ -6,7 +6,7 @@ using BrandUp.FileStorage.Exceptions;
 
 namespace BrandUp.FileStorage.AwsS3
 {
-    public class AwsS3FileStorage<TMetadata> : IFileStorage<TMetadata> where TMetadata : class, new()
+    public class AwsS3FileStorage<TMetadata> : IFileStorage<TMetadata> where TMetadata : class, IFileMetadata, new()
     {
         readonly AwsS3Configuration options;
         readonly AmazonS3Client client;
@@ -70,19 +70,18 @@ namespace BrandUp.FileStorage.AwsS3
         }
 
         public Task<FileInfo<TMetadata>> UploadFileAsync(TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
-        {
-            return UploadFileAsync(Guid.NewGuid(), fileInfo, fileStream, cancellationToken);
-        }
+             => UploadFileAsync(Guid.NewGuid(), fileInfo, fileStream, cancellationToken);
 
-        public Task<FileInfo<TMetadata>> UploadFileAsync(Guid fileId, Stream fileStream, CancellationToken cancellationToken = default)
-        {
-            return UploadFileAsync(fileId, new TMetadata(), fileStream, cancellationToken);
-        }
 
-        public Task<FileInfo<TMetadata>> UploadFileAsync(Stream fileStream, CancellationToken cancellationToken = default)
-        {
-            return UploadFileAsync(new TMetadata(), fileStream, cancellationToken);
-        }
+        //public Task<FileInfo<TMetadata>> UploadFileAsync(Guid fileId, Stream fileStream, CancellationToken cancellationToken = default)
+        //{
+        //    return UploadFileAsync(fileId, new TMetadata(), fileStream, cancellationToken);
+        //}
+
+        //public Task<FileInfo<TMetadata>> UploadFileAsync(Stream fileStream, CancellationToken cancellationToken = default)
+        //{
+        //    return UploadFileAsync(new TMetadata(), fileStream, cancellationToken);
+        //}
 
         public async Task<FileInfo<TMetadata>> GetFileInfoAsync(Guid fileId, CancellationToken cancellationToken = default)
         {

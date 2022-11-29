@@ -42,7 +42,7 @@ namespace BrandUp.FileStorage
                 throw new ArgumentException($"Configuration for {fileType.Name} already exist");
         }
 
-        internal IFileStorage<TFileType> CreateInstanse<TFileType>(IServiceProvider serviceProvider) where TFileType : class, new()
+        internal IFileStorage<TFileType> CreateInstanse<TFileType>(IServiceProvider serviceProvider) where TFileType : class, IFileMetadata, new()
         {
             if (storageConstructors.TryGetValue(typeof(TFileType), out var constructor))
             {

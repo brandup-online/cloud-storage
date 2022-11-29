@@ -47,10 +47,12 @@ namespace BrandUp.FileStorage.AwsS3
 
             foreach (var property in metadataProperties)
             {
+                var converter = TypeDescriptor.GetConverter(property.PropertyType);
+
                 if (property.PropertyType == typeof(string))
-                    metadata.Add(metadataKey + "-" + ToKebabCase(property.Name), EncodeFileName(property.GetValue(fileInfo).ToString()));
+                    metadata.Add(metadataKey + "-" + ToKebabCase(property.Name), EncodeFileName(converter.ConvertToString(property.GetValue(fileInfo))));
                 else
-                    metadata.Add(metadataKey + "-" + ToKebabCase(property.Name), property.GetValue(fileInfo).ToString());
+                    metadata.Add(metadataKey + "-" + ToKebabCase(property.Name), converter.ConvertToString(property.GetValue(fileInfo)));
             }
 
             return metadata;

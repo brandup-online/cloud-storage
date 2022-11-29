@@ -1,4 +1,4 @@
-﻿namespace BrandUp.FileStorage.Tests._fakes
+﻿namespace BrandUp.FileStorage.Folder.Tests._fakes
 {
     public class FakeFile : IFileMetadata
     {

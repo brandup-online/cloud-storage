@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BrandUp.FileStorage.AwsS3
 {
-    public static class ICloudStorageBuilderExtension
+    public static class IFileStorageBuilderExtension
     {
         public static IFileStorageBuilder AddAwsS3Storage(this IFileStorageBuilder builder, IConfiguration configuration)
         {
