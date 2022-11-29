@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
 namespace BrandUp.FileStorage.Builder
@@ -8,18 +7,13 @@ namespace BrandUp.FileStorage.Builder
     {
         public IServiceCollection Services { get; set; }
 
-        public IDictionary<string, PropertyInfo[]> Properties { get; init; }
-        public IList<Type> Types { get; init; }
-        public IDictionary<Type, ConfigurationCache> ConfigurationCache { get; init; }
-
-        private const string configSuffix = "Configuration";
-        private const string storageSuffix = "FileStorage";
+        public IDictionary<Type, PropertyInfo[]> Properties { get; init; } // Type is file type
+        public IDictionary<Type, ConfigurationCache> ConfigurationCache { get; init; } // Type is config type
 
         public FileStorageBuilder(IServiceCollection services)
         {
-            Properties = new Dictionary<string, PropertyInfo[]>();
+            Properties = new Dictionary<Type, PropertyInfo[]>();
             Services = services ?? throw new ArgumentNullException(nameof(services));
-            Types = new List<Type>();
 
             ConfigurationCache = new Dictionary<Type, ConfigurationCache>();
 
@@ -30,25 +24,30 @@ namespace BrandUp.FileStorage.Builder
             }); ;
         }
 
-        public FileStorageBuilder AddFile<T>() where T : class, new()
+        public FileStorageBuilder AddConfiguration<TConfig>(Type storageType, TConfig configuration) where TConfig : class
         {
-            var type = typeof(T);
-            var properties = type.GetProperties();
-            Types.Add(type);
-            if (!Properties.TryAdd(type.Name, properties))
-                throw new ArgumentException($"Type {typeof(T)} already added in bulder");
+            var configType = typeof(TConfig);
+
+            var cache = new ConfigurationCache(storageType, configType, configuration);
+
+            if (!ConfigurationCache.TryAdd(configType, cache))
+                throw new ArgumentException($"Configuration for {storageType} already exist");
 
             return this;
         }
 
-        public FileStorageBuilder AddConfiguration<TConfig>(Type storageType, IConfiguration configuration) where TConfig : class
+        public FileStorageBuilder AddFileToStorage<TFile>(object configuration) where TFile : class, new()
         {
-            var type = typeof(TConfig);
+            var type = typeof(TFile);
+            var configType = configuration.GetType();
 
-            var cache = new ConfigurationCache(storageType, Types, type, configuration);
+            if (ConfigurationCache.TryGetValue(configType, out var cache))
+                cache.Add(type, configuration);
 
-            if (!ConfigurationCache.TryAdd(type, cache))
-                throw new ArgumentException($"configuration for {storageType} already exist");
+            var properties = type.GetProperties();
+            if (!Properties.TryGetValue(type, out _))
+                if (!Properties.TryAdd(type, properties))
+                    throw new Exception($"Unknown error on adding data to dictionary");
 
             return this;
         }
@@ -58,12 +57,11 @@ namespace BrandUp.FileStorage.Builder
     {
         public IServiceCollection Services { get; set; }
 
-        public IDictionary<string, PropertyInfo[]> Properties { get; }
-        public IList<Type> Types { get; }
+        public IDictionary<Type, PropertyInfo[]> Properties { get; }
         public IDictionary<Type, ConfigurationCache> ConfigurationCache { get; }
 
-        FileStorageBuilder AddFile<T>() where T : class, new();
-        FileStorageBuilder AddConfiguration<TConfig>(Type storageType, IConfiguration configuration) where TConfig : class;
+        FileStorageBuilder AddFileToStorage<TFile>(object configuration) where TFile : class, new();
+        FileStorageBuilder AddConfiguration<TConfig>(Type storageType, TConfig configuration) where TConfig : class;
 
     }
 }

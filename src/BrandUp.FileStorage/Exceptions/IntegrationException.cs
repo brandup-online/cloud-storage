@@ -4,6 +4,6 @@ namespace BrandUp.FileStorage.Exceptions
 {
     public class IntegrationException : Exception
     {
-        public IntegrationException(AmazonS3Exception innerException) : base("Ошибка взаимодействия.", innerException) { }
+        public IntegrationException(AmazonS3Exception innerException) : base("Integration error", innerException) { }
     }
 }

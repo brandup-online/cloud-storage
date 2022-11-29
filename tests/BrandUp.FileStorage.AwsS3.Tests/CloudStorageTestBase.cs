@@ -23,11 +23,15 @@ namespace BrandUp.FileStorage.AwsS3.Tests
                .AddEnvironmentVariables()
                .Build();
 
-            var builder = services.AddFileStorage().AddFile<FakeFile>();
+            var builder = services.AddFileStorage();
 
-            builder.AddAwsS3Storage(config.GetSection("TestStorage"));
+            builder.AddAwsS3Storage(config.GetSection("TestCloudStorage:Default"))
+                    .AddAwsS3Bucket<FakeFile>(o => config.GetSection("TestCloudStorage:FakeFile").Bind(o));
 
-            //builder.AddLocalStorage();
+            //builder.AddLocalStorage(config.GetSection("TestLocalStorage:Default"))
+            //    .AddLocalFile<FakeFile1>()
+            //    .AddLocalFile<FakeFile2>()
+            //    .AddLocalFile<FakeFile3>();
 
 
             OnConfigure(services);

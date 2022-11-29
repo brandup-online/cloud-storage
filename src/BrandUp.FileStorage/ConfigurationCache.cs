@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
 namespace BrandUp.FileStorage
@@ -11,41 +10,36 @@ namespace BrandUp.FileStorage
         readonly IDictionary<string, object> configs;
         readonly Type configurationType;
 
-        public ConfigurationCache(Type storageType, IEnumerable<Type> fileTypes, Type configurationType, IConfiguration configuration)
+        public ConfigurationCache(Type storageType, Type configurationType, object defaultConfiguration)
         {
             this.storageType = storageType ?? throw new ArgumentNullException(nameof(storageType));
 
-            var @default = configuration.GetSection("Default").Get(configurationType);
-            if (@default == null)
-                throw new ArgumentNullException(nameof(@default));
-
-            configs = new Dictionary<string, object>() { { "Default", @default } };
+            configs = new Dictionary<string, object>() { { "Default", defaultConfiguration } };
 
             storageConstructors = new Dictionary<Type, ConstructorInfo>();
 
-            foreach (var fileType in fileTypes)
-            {
-                var constructors = this.storageType.MakeGenericType(fileType).GetConstructors();
-                if (!constructors.Any())
-                    throw new ArgumentNullException(nameof(constructors));
-
-                if (constructors.Length > 1)
-                    throw new ArgumentException("У провайдера не может быть больше одного коструктора");
-                var constructor = constructors.First();
-                if (constructor.IsPublic == false)
-                    throw new ArgumentException("Конструктор провайдера должен быть публичным");
-
-                storageConstructors.Add(fileType, constructor);
-
-                var options = configuration.GetSection(fileType.Name).Get(configurationType);
-                if (options != null)
-                {
-                    if (!configs.TryAdd(fileType.Name, options))
-                        throw new ArgumentException($"Для типа {fileType.Name} уже сущесвует конфигурация");
-                }
-            }
-
             this.configurationType = configurationType ?? throw new ArgumentNullException(nameof(configurationType));
+        }
+
+        internal void Add(Type fileType, object configuration)
+        {
+            if (configuration == null)
+                throw new ArgumentNullException(nameof(configuration));
+
+            if (configuration.GetType() != configurationType)
+                throw new ArgumentException("Passed object does not match with the configuration type");
+
+            var constructor = storageType.MakeGenericType(fileType).GetConstructors().Where(c => c.IsPublic
+            && c.GetParameters().Select(p => p.ParameterType).Contains(configurationType)).FirstOrDefault();
+
+            if (constructor == null)
+                throw new ArgumentException($"Type does not have suitable constructors (constructor must be public and have parameter of type {configurationType.Name})");
+
+            if (!storageConstructors.TryAdd(fileType, constructor))
+                throw new ArgumentException($"Constructor for {fileType.Name} already exist");
+
+            if (!configs.TryAdd(fileType.Name, configuration))
+                throw new ArgumentException($"Configuration for {fileType.Name} already exist");
         }
 
         internal IFileStorage<TFileType> CreateInstanse<TFileType>(IServiceProvider serviceProvider) where TFileType : class, new()

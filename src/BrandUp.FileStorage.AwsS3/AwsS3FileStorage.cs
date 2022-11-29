@@ -10,10 +10,9 @@ namespace BrandUp.FileStorage.AwsS3
     {
         readonly AwsS3Configuration options;
         readonly AmazonS3Client client;
+        readonly IMetadataSerializer<TMetadata> metadataSerializer;
 
         private bool isDisposed;
-
-        readonly IMetadataSerializer<TMetadata> metadataSerializer;
 
         public AwsS3FileStorage(AwsS3Configuration options, IMetadataSerializer<TMetadata> metadataSerializer)
         {
@@ -37,7 +36,7 @@ namespace BrandUp.FileStorage.AwsS3
             ms.Seek(0, SeekOrigin.Begin);
 
             if (ms.Length == 0)
-                throw new InvalidOperationException("Файл не содержит данных.");
+                throw new InvalidOperationException("File does not contain any data");
 
             try
             {
@@ -84,7 +83,6 @@ namespace BrandUp.FileStorage.AwsS3
         {
             return UploadFileAsync(new TMetadata(), fileStream, cancellationToken);
         }
-
 
         public async Task<FileInfo<TMetadata>> GetFileInfoAsync(Guid fileId, CancellationToken cancellationToken = default)
         {
@@ -156,9 +154,6 @@ namespace BrandUp.FileStorage.AwsS3
             }
         }
 
-        #endregion
-
-        #region Helpers
         #endregion
 
         #region IDisposable members

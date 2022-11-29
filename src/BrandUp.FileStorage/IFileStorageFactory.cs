@@ -12,12 +12,10 @@ namespace BrandUp.FileStorage
             this.provider = provider ?? throw new ArgumentNullException(nameof(provider));
         }
 
-        public IFileStorage<TFileType> Create<TFileType, TConfigType>()
-            where TFileType : class, new()
-            where TConfigType : class, new()
-        {
-            return builder.ConfigurationCache[typeof(TConfigType)].CreateInstanse<TFileType>(provider);
-        }
+        public IFileStorage<TFileType> Create<TFileType, TConfigType>() where TFileType : class, new()
+                                                                        where TConfigType : class, new()
+           => builder.ConfigurationCache[typeof(TConfigType)].CreateInstanse<TFileType>(provider);
+
     }
 
     public interface IFileStorageFactory

@@ -4,6 +4,6 @@ namespace BrandUp.FileStorage.Exceptions
 {
     public class AccessDeniedException : Exception
     {
-        public AccessDeniedException(AmazonS3Exception innerException) : base("Доступ запрещен", innerException) { }
+        public AccessDeniedException(AmazonS3Exception innerException) : base("Access denied", innerException) { }
     }
 }

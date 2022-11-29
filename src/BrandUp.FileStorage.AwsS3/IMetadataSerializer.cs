@@ -8,20 +8,20 @@ namespace BrandUp.FileStorage.AwsS3
 {
     public class MetadataSerializer<TMetadata> : IMetadataSerializer<TMetadata> where TMetadata : class, new()
     {
-        const string metadataKey = "X-Amz-Meta";
         readonly PropertyInfo[] metadataProperties;
 
-        static readonly Regex r = new("(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z0-9])", RegexOptions.Compiled);
+        readonly static Regex r = new("(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z0-9])", RegexOptions.Compiled);
+        const string metadataKey = "X-Amz-Meta";
 
         public MetadataSerializer(IFileStorageBuilder builder)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
 
+            if (!builder.Properties.TryGetValue(typeof(TMetadata), out var props))
+                throw new ArgumentException(typeof(TMetadata).Name);
 
-            metadataProperties = builder.Properties[typeof(TMetadata).Name];
-            //if (builder.Properties.TryGetValue(typeof(TMetadata).Name, out metadataProperties))
-            //    throw new ArgumentException(typeof(TMetadata).Name);
+            metadataProperties = props;
         }
 
         public FileInfo<TMetadata> Deserialize(Guid fileId, GetObjectMetadataResponse response)
@@ -65,6 +65,7 @@ namespace BrandUp.FileStorage.AwsS3
 
             return Convert.ToHexString(System.Text.Encoding.UTF8.GetBytes(fileName));
         }
+
         static string DecodeFileName(string encodedValue)
         {
             if (encodedValue == null)
