@@ -2,7 +2,7 @@
 
 # Using
 
-[nuget](https://www.nuget.org/packages/BrandUp.CloudStorage)
+[![Build status](https://dev.azure.com/brandup/BrandUp%20Core/_apis/build/status/BrandUp.CloudStorage)](https://dev.azure.com/brandup/BrandUp%20Core/_build/latest?definitionId=8)
 
 Adding to DI
 ```
