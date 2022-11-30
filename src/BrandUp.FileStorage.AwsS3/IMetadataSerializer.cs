@@ -1,14 +1,14 @@
 ﻿using Amazon.S3.Model;
 using BrandUp.FileStorage.Builder;
 using System.ComponentModel;
-using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
 namespace BrandUp.FileStorage.AwsS3
 {
     public class MetadataSerializer<TMetadata> : IMetadataSerializer<TMetadata> where TMetadata : class, new()
     {
-        readonly PropertyInfo[] metadataProperties;
+        readonly PropertyCacheCollection metadataProperties;
 
         readonly static Regex r = new("(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z0-9])", RegexOptions.Compiled);
         const string metadataKey = "X-Amz-Meta";
@@ -30,12 +30,15 @@ namespace BrandUp.FileStorage.AwsS3
 
             foreach (var property in metadataProperties)
             {
-                var converter = TypeDescriptor.GetConverter(property.PropertyType);
+                var converter = TypeDescriptor.GetConverter(property.Property.PropertyType);
 
-                if (property.PropertyType == typeof(string))
-                    property.SetValue(fileMetadata, DecodeFileName(response.Metadata[metadataKey + "-" + ToKebabCase(property.Name)]));
+                var key = metadataKey + "-" + string.Join("-", ToOnlyFirstIsUpper(property.FullPropertyName.Split("."))); ;
+                if (property.Property.PropertyType == typeof(string))
+                    SetPropertyValue(fileMetadata, property.FullPropertyName, DecodeFileName(response.Metadata[key]));
+                //property.Property.SetValue(fileMetadata, DecodeFileName(response.Metadata[metadataKey + "-" + property.FullPropertyName.Replace(".", "-").ToLower()]));
                 else
-                    property.SetValue(fileMetadata, converter.ConvertFrom(response.Metadata[metadataKey + "-" + ToKebabCase(property.Name)]));
+                    SetPropertyValue(fileMetadata, property.FullPropertyName, converter.ConvertFrom(response.Metadata[key]));
+                //property.Property.SetValue(fileMetadata, converter.ConvertFrom(response.Metadata[metadataKey + "-" + property.FullPropertyName.Replace(".", "-").ToLower()]));
             }
 
             return new FileInfo<TMetadata> { Metadata = fileMetadata, Size = response.ContentLength, FileId = fileId };
@@ -47,18 +50,60 @@ namespace BrandUp.FileStorage.AwsS3
 
             foreach (var property in metadataProperties)
             {
-                var converter = TypeDescriptor.GetConverter(property.PropertyType);
-
-                if (property.PropertyType == typeof(string))
-                    metadata.Add(metadataKey + "-" + ToKebabCase(property.Name), EncodeFileName(converter.ConvertToString(property.GetValue(fileInfo))));
+                var converter = TypeDescriptor.GetConverter(property.Property.PropertyType);
+                if (property.Property.PropertyType == typeof(string))
+                    metadata.Add(metadataKey + "-" + property.FullPropertyName.Replace(".", "-"), EncodeFileName(converter.ConvertToString(GetPropertyValue(fileInfo, property.FullPropertyName))));
                 else
-                    metadata.Add(metadataKey + "-" + ToKebabCase(property.Name), converter.ConvertToString(property.GetValue(fileInfo)));
+                    metadata.Add(metadataKey + "-" + property.FullPropertyName.Replace(".", "-"), converter.ConvertToString(GetPropertyValue(fileInfo, property.FullPropertyName)));
             }
 
             return metadata;
         }
 
         #region Helpers
+
+        static object GetPropertyValue(object src, string propName)
+        {
+            if (src == null) throw new ArgumentException("Value cannot be null.", "src");
+            if (propName == null) throw new ArgumentException("Value cannot be null.", "propName");
+
+            if (propName.Contains("."))//complex type nested
+            {
+                var temp = propName.Split(new char[] { '.' }, 2);
+                return GetPropertyValue(GetPropertyValue(src, temp[0]), temp[1]);
+            }
+            else
+            {
+                var prop = src.GetType().GetProperty(propName);
+                return prop != null ? prop.GetValue(src, null) : null;
+            }
+        }
+
+        static void SetPropertyValue(object src, string propName, object value)
+        {
+            if (src == null) throw new ArgumentException("Value cannot be null.", "src");
+            if (propName == null) throw new ArgumentException("Value cannot be null.", "propName");
+
+            if (propName.Contains(".")) // complex type nested
+            {
+                var temp = propName.Split(new char[] { '.' }, 2);
+                var prop = src.GetType().GetProperty(temp[0]);
+
+                var nestedObj = prop.GetValue(src, null);
+                if (nestedObj == null)
+                {
+                    nestedObj = FormatterServices.GetUninitializedObject(prop.PropertyType);
+                    prop.SetValue(src, nestedObj);
+                }
+
+                SetPropertyValue(nestedObj, temp[1], value);
+            }
+            else
+            {
+                var prop = src.GetType().GetProperty(propName);
+                prop.SetValue(src, value);
+            }
+        }
 
         static string EncodeFileName(string fileName)
         {
@@ -76,6 +121,14 @@ namespace BrandUp.FileStorage.AwsS3
             return System.Text.Encoding.UTF8.GetString(Convert.FromHexString(encodedValue));
         }
 
+        static string[] ToOnlyFirstIsUpper(string[] values)
+        {
+            List<string> result = new();
+            foreach (var value in values)
+                result.Add(value[0] + value[1..].ToLowerInvariant());
+
+            return result.ToArray();
+        }
         static string ToKebabCase(string value)
         {
             if (string.IsNullOrEmpty(value))

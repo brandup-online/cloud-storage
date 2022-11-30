@@ -67,12 +67,13 @@ namespace BrandUp.FileStorage.Tests
 
             var inputMetadata = metadata as FakeFile;
             var downloadedMetadata = getFileinfo.Metadata as FakeFile;
-            Assert.Equal(inputMetadata.FakeBool, downloadedMetadata.FakeBool);
+
             Assert.Equal(inputMetadata.FileName, downloadedMetadata.FileName);
             Assert.Equal(inputMetadata.Extension, downloadedMetadata.Extension);
             Assert.Equal(inputMetadata.FakeInt, downloadedMetadata.FakeInt);
             Assert.Equal(inputMetadata.FakeTimeSpan, downloadedMetadata.FakeTimeSpan);
-            Assert.Equal(inputMetadata.FakeGuid, downloadedMetadata.FakeGuid);
+            Assert.Equal(inputMetadata.FakeInnner.FakeGuid, downloadedMetadata.FakeInnner.FakeGuid);
+            Assert.Equal(inputMetadata.FakeInnner.FakeBool, downloadedMetadata.FakeInnner.FakeBool);
             Assert.Equal(inputMetadata.FakeDateTime, downloadedMetadata.FakeDateTime);
 
             Assert.Equal(stream.Length, getFileinfo.Size);
