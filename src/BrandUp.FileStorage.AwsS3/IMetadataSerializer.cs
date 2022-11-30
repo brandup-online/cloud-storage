@@ -35,10 +35,8 @@ namespace BrandUp.FileStorage.AwsS3
                 var key = metadataKey + "-" + string.Join("-", ToOnlyFirstIsUpper(property.FullPropertyName.Split("."))); ;
                 if (property.Property.PropertyType == typeof(string))
                     SetPropertyValue(fileMetadata, property.FullPropertyName, DecodeFileName(response.Metadata[key]));
-                //property.Property.SetValue(fileMetadata, DecodeFileName(response.Metadata[metadataKey + "-" + property.FullPropertyName.Replace(".", "-").ToLower()]));
                 else
                     SetPropertyValue(fileMetadata, property.FullPropertyName, converter.ConvertFrom(response.Metadata[key]));
-                //property.Property.SetValue(fileMetadata, converter.ConvertFrom(response.Metadata[metadataKey + "-" + property.FullPropertyName.Replace(".", "-").ToLower()]));
             }
 
             return new FileInfo<TMetadata> { Metadata = fileMetadata, Size = response.ContentLength, FileId = fileId };
@@ -128,13 +126,6 @@ namespace BrandUp.FileStorage.AwsS3
                 result.Add(value[0] + value[1..].ToLowerInvariant());
 
             return result.ToArray();
-        }
-        static string ToKebabCase(string value)
-        {
-            if (string.IsNullOrEmpty(value))
-                return value;
-
-            return r.Replace(value, "-$1").Trim();
         }
 
         #endregion
