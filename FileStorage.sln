@@ -11,9 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.AwsS3", "src\BrandUp.FileStorage.AwsS3\BrandUp.FileStorage.AwsS3.csproj", "{8EFCF8A7-DF2D-4EAC-B0CB-5ED85DFE0875}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.Tests", "tests\BrandUp.FileStorage.AwsS3.Tests\BrandUp.FileStorage.Tests.csproj", "{2C032012-B340-45CC-87C3-0CE461E7EE47}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.Folder", "src\BrandUp.FileStorage.Local\BrandUp.FileStorage.Folder.csproj", "{34FDDF46-868B-4C88-BA20-554C29E9F36E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrandUp.FileStorage.Folder", "BrandUp.FileStorage.Local\BrandUp.FileStorage.Folder.csproj", "{30DCF0CF-FEFD-49EA-BE56-06DB95882220}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.Tests", "tests\BrandUp.FileStorage.Tests\BrandUp.FileStorage.Tests.csproj", "{E32E9578-9B45-4F2A-80EE-8554DECABAF6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,14 +29,14 @@ Global
 		{8EFCF8A7-DF2D-4EAC-B0CB-5ED85DFE0875}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8EFCF8A7-DF2D-4EAC-B0CB-5ED85DFE0875}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8EFCF8A7-DF2D-4EAC-B0CB-5ED85DFE0875}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2C032012-B340-45CC-87C3-0CE461E7EE47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2C032012-B340-45CC-87C3-0CE461E7EE47}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2C032012-B340-45CC-87C3-0CE461E7EE47}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2C032012-B340-45CC-87C3-0CE461E7EE47}.Release|Any CPU.Build.0 = Release|Any CPU
-		{30DCF0CF-FEFD-49EA-BE56-06DB95882220}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{30DCF0CF-FEFD-49EA-BE56-06DB95882220}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{30DCF0CF-FEFD-49EA-BE56-06DB95882220}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{30DCF0CF-FEFD-49EA-BE56-06DB95882220}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34FDDF46-868B-4C88-BA20-554C29E9F36E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34FDDF46-868B-4C88-BA20-554C29E9F36E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34FDDF46-868B-4C88-BA20-554C29E9F36E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34FDDF46-868B-4C88-BA20-554C29E9F36E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E32E9578-9B45-4F2A-80EE-8554DECABAF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E32E9578-9B45-4F2A-80EE-8554DECABAF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E32E9578-9B45-4F2A-80EE-8554DECABAF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E32E9578-9B45-4F2A-80EE-8554DECABAF6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -44,8 +44,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{80F4EEBC-3354-4549-8A74-333AC8DC6464} = {DE708390-4C9C-493F-AA34-F297E7EA425B}
 		{8EFCF8A7-DF2D-4EAC-B0CB-5ED85DFE0875} = {DE708390-4C9C-493F-AA34-F297E7EA425B}
-		{2C032012-B340-45CC-87C3-0CE461E7EE47} = {5B333CFD-BF9C-480F-B69E-E608542CD316}
-		{30DCF0CF-FEFD-49EA-BE56-06DB95882220} = {DE708390-4C9C-493F-AA34-F297E7EA425B}
+		{34FDDF46-868B-4C88-BA20-554C29E9F36E} = {DE708390-4C9C-493F-AA34-F297E7EA425B}
+		{E32E9578-9B45-4F2A-80EE-8554DECABAF6} = {5B333CFD-BF9C-480F-B69E-E608542CD316}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {34152893-6A53-4557-8E50-CE9C0C9549E1}
