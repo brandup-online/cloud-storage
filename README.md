@@ -31,15 +31,22 @@ To start testing, you need to create a file "appsettings.test.json" in "Cloud St
 
 ```
 {
-  "TestStorage": {
+"TestCloudStorage": {
     "Default": {
-      "ServiceUrl": "your url",
-      "AuthenticationRegion": "your region",
+      "ServiceUrl": "url",
+      "AuthenticationRegion": "region",
       "AccessKeyId": "your key",
       "SecretAccessKey": "your secret"
     },
     "FakeFile": {
       "BucketName": "your bucket"
     }
+  },
+  "TestFolderStorage": {
+    "Default": {
+      "ContentPath": "C:\\Test",
+      "MetadataPath": "C:\\Test\\Metadata"
+    }
+  }
 }
 ```
