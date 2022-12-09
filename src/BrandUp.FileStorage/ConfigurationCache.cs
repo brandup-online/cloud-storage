@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace BrandUp.FileStorage
 {
-    public class ConfigurationCache
+    internal class ConfigurationCache
     {
         readonly IDictionary<Type, ConstructorInfo> storageConstructors;
         readonly Type storageType;

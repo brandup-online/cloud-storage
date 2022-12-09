@@ -5,8 +5,17 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BrandUp.FileStorage.AwsS3
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public static class IFileStorageBuilderExtension
     {
+        /// <summary>
+        /// Adds Amazon S3 cloud to storage builder
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <param name="configuration"></param>
+        /// <returns></returns>
         public static IFileStorageBuilder AddAwsS3Storage(this IFileStorageBuilder builder, IConfiguration configuration)
         {
             AwsS3Configuration config = new();
@@ -19,6 +28,13 @@ namespace BrandUp.FileStorage.AwsS3
             return builder;
         }
 
+        /// <summary>
+        /// Adds bucket to storage builder
+        /// </summary>
+        /// <typeparam name="TFile">metadata for files in this bucket</typeparam>
+        /// <param name="builder"></param>
+        /// <param name="configureAction"></param>
+        /// <returns></returns>
         public static IFileStorageBuilder AddAwsS3Bucket<TFile>(this IFileStorageBuilder builder, Action<AwsS3Configuration> configureAction) where TFile : class, new()
         {
             var options = new AwsS3Configuration();

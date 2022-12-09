@@ -1,17 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
+	<TargetFramework>net7.0</TargetFramework>
+	<ImplicitUsings>enable</ImplicitUsings>
+	<Nullable>disable</Nullable>
+	  <RepositoryUrl>https://github.com/brandup-online/cloud-storage</RepositoryUrl>
+	  <PackageProjectUrl>https://github.com/brandup-online/cloud-storage</PackageProjectUrl>
+	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+	<PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BrandUp.FileStorage\BrandUp.FileStorage.csproj" />
+	<ProjectReference Include="..\BrandUp.FileStorage\BrandUp.FileStorage.csproj" />
   </ItemGroup>
 
 </Project>

@@ -2,17 +2,25 @@
 using BrandUp.FileStorage.Builder;
 using System.ComponentModel;
 using System.Runtime.Serialization;
-using System.Text.RegularExpressions;
 
 namespace BrandUp.FileStorage.AwsS3
 {
-    public class MetadataSerializer<TMetadata> : IMetadataSerializer<TMetadata> where TMetadata : class, new()
+    /// <summary>
+    /// Serializer to AWS metadata properties
+    /// </summary>
+    /// <typeparam name="TMetadata"></typeparam>
+    public class MetadataSerializer<TMetadata> : IMetadataSerializer<TMetadata> where TMetadata : class, IFileMetadata, new()
     {
         readonly PropertyCacheCollection metadataProperties;
 
-        readonly static Regex r = new("(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z0-9])", RegexOptions.Compiled);
         const string metadataKey = "X-Amz-Meta";
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="builder">Storage builer that stored properties info for metadata class</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         public MetadataSerializer(IFileStorageBuilder builder)
         {
             if (builder == null)
@@ -24,7 +32,13 @@ namespace BrandUp.FileStorage.AwsS3
             metadataProperties = props;
         }
 
-        public FileInfo<TMetadata> Deserialize(Guid fileId, GetObjectMetadataResponse response)
+        /// <summary>
+        /// Deserialize Amazon S3 metadata to file metadata
+        /// </summary>
+        /// <param name="fileId">file</param>
+        /// <param name="response"></param>
+        /// <returns></returns>
+        public TMetadata Deserialize(Guid fileId, GetObjectMetadataResponse response)
         {
             var fileMetadata = new TMetadata();
 
@@ -39,9 +53,14 @@ namespace BrandUp.FileStorage.AwsS3
                     SetPropertyValue(fileMetadata, property.FullPropertyName, converter.ConvertFrom(response.Metadata[key]));
             }
 
-            return new FileInfo<TMetadata> { Metadata = fileMetadata, Size = response.ContentLength, FileId = fileId };
+            return fileMetadata;
         }
 
+        /// <summary>
+        /// Serialize file metadata to Amazon S3 metadata
+        /// </summary>
+        /// <param name="fileInfo">file metadata </param>
+        /// <returns>Dictioanary where key is amazon metadata key, and value is converted to string value of matadata</returns>
         public Dictionary<string, string> Serialize(TMetadata fileInfo)
         {
             var metadata = new Dictionary<string, string>();
@@ -131,9 +150,25 @@ namespace BrandUp.FileStorage.AwsS3
         #endregion
     }
 
-    public interface IMetadataSerializer<TMetadata> where TMetadata : class, new()
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TMetadata"></typeparam>
+    public interface IMetadataSerializer<TMetadata> where TMetadata : class, IFileMetadata, new()
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fileInfo"></param>
+        /// <returns></returns>
         Dictionary<string, string> Serialize(TMetadata fileInfo);
-        FileInfo<TMetadata> Deserialize(Guid fileId, GetObjectMetadataResponse response);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fileId"></param>
+        /// <param name="response"></param>
+        /// <returns></returns>
+        TMetadata Deserialize(Guid fileId, GetObjectMetadataResponse response);
     }
 }

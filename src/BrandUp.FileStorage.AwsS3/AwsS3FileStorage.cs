@@ -6,6 +6,10 @@ using BrandUp.FileStorage.Exceptions;
 
 namespace BrandUp.FileStorage.AwsS3
 {
+    /// <summary>
+    /// Storage for Amazon S3 cloud storage
+    /// </summary>
+    /// <typeparam name="TMetadata"></typeparam>
     public class AwsS3FileStorage<TMetadata> : IFileStorage<TMetadata> where TMetadata : class, IFileMetadata, new()
     {
         readonly AwsS3Configuration options;
@@ -14,6 +18,12 @@ namespace BrandUp.FileStorage.AwsS3
 
         private bool isDisposed;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="options">Amazon S3 configuration</param>
+        /// <param name="metadataSerializer">Service for serializing metadata to Amazon S3 metadata</param>
+        /// <exception cref="ArgumentNullException"></exception>
         public AwsS3FileStorage(AwsS3Configuration options, IMetadataSerializer<TMetadata> metadataSerializer)
         {
             this.options = options ?? throw new ArgumentNullException(nameof(options));
@@ -29,6 +39,17 @@ namespace BrandUp.FileStorage.AwsS3
 
         #region IFileStorage members
 
+        /// <summary>
+        /// Uploads file to the store with predefined id
+        /// </summary>
+        /// <param name="fileId">Id of file in storage </param>
+        /// <param name="fileInfo">Metadata for save</param>
+        /// <param name="fileStream">Stream of saving file</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Information of file with metadata</returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="AccessDeniedException"></exception>
+        /// <exception cref="IntegrationException"></exception>
         public async Task<FileInfo<TMetadata>> UploadFileAsync(Guid fileId, TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
         {
             using var ms = new MemoryStream();
@@ -69,20 +90,24 @@ namespace BrandUp.FileStorage.AwsS3
             }
         }
 
+        /// <summary>
+        /// Uploads file to the store
+        /// </summary>
+        /// <param name="fileInfo">Metadata for save</param>
+        /// <param name="fileStream">Stream of saving file</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Information of file with metadata</returns>
         public Task<FileInfo<TMetadata>> UploadFileAsync(TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
              => UploadFileAsync(Guid.NewGuid(), fileInfo, fileStream, cancellationToken);
 
-
-        //public Task<FileInfo<TMetadata>> UploadFileAsync(Guid fileId, Stream fileStream, CancellationToken cancellationToken = default)
-        //{
-        //    return UploadFileAsync(fileId, new TMetadata(), fileStream, cancellationToken);
-        //}
-
-        //public Task<FileInfo<TMetadata>> UploadFileAsync(Stream fileStream, CancellationToken cancellationToken = default)
-        //{
-        //    return UploadFileAsync(new TMetadata(), fileStream, cancellationToken);
-        //}
-
+        /// <summary>
+        /// Gets metadata of file
+        /// </summary>
+        /// <param name="fileId">Id of file</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Information of file with metadata</returns>
+        /// <exception cref="AccessDeniedException"></exception>
+        /// <exception cref="IntegrationException"></exception>
         public async Task<FileInfo<TMetadata>> GetFileInfoAsync(Guid fileId, CancellationToken cancellationToken = default)
         {
             try
@@ -94,7 +119,7 @@ namespace BrandUp.FileStorage.AwsS3
 
                 }, cancellationToken);
 
-                return metadataSerializer.Deserialize(fileId, response);
+                return new() { FileId = fileId, Size = response.ContentLength, Metadata = metadataSerializer.Deserialize(fileId, response) };
             }
             catch (AmazonS3Exception ex)
             {
@@ -107,6 +132,15 @@ namespace BrandUp.FileStorage.AwsS3
             }
         }
 
+        /// <summary>
+        /// Reads file from storage
+        /// </summary>
+        /// <param name="fileId">Id of file</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>File stream</returns>
+        /// <exception cref="NotFoundException"></exception>
+        /// <exception cref="AccessDeniedException"></exception>
+        /// <exception cref="IntegrationException"></exception>
         public async Task<Stream> ReadFileAsync(Guid fileId, CancellationToken cancellationToken = default)
         {
             try
@@ -123,13 +157,20 @@ namespace BrandUp.FileStorage.AwsS3
             {
                 return ex.StatusCode switch
                 {
-                    System.Net.HttpStatusCode.NotFound => null,
+                    System.Net.HttpStatusCode.NotFound => throw new NotFoundException(ex),
                     System.Net.HttpStatusCode.Forbidden => throw new AccessDeniedException(ex),
                     _ => throw new IntegrationException(ex)
                 };
             }
         }
 
+        /// <summary>
+        /// Deletes file from storage
+        /// </summary>
+        /// <param name="fileId">Id of file</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>true - if file deletes, false - if not</returns>
+        /// <exception cref="IntegrationException"></exception>
         public async Task<bool> DeleteFileAsync(Guid fileId, CancellationToken cancellationToken = default)
         {
             try
@@ -157,6 +198,10 @@ namespace BrandUp.FileStorage.AwsS3
 
         #region IDisposable members
 
+        /// <summary>
+        /// Dispose Amazon client
+        /// </summary>
+        /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
             if (!isDisposed)
@@ -168,6 +213,9 @@ namespace BrandUp.FileStorage.AwsS3
             }
         }
 
+        /// <summary>
+        /// Dispose Amazon client
+        /// </summary>
         public void Dispose()
         {
             Dispose(disposing: true);
