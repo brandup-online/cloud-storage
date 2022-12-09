@@ -50,3 +50,7 @@ To start testing, you need to create a file "appsettings.test.json" in "Cloud St
   }
 }
 ```
+#Exceptions 
+```AccessDeniedException``` - Throws if storage denies access to itself (invalid configuration or something else)
+```IntegrationException``` - Common exception for invalid storage work
+```NotFoundException``` -  Throws if file that you trying to get does not exist in this storage
