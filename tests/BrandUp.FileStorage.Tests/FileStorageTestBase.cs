@@ -1,4 +1,5 @@
 ﻿using BrandUp.FileStorage.AwsS3;
+using BrandUp.FileStorage.Exceptions;
 using BrandUp.FileStorage.Folder;
 using BrandUp.FileStorage.Tests._fakes;
 using Microsoft.Extensions.Configuration;
@@ -84,6 +85,8 @@ namespace BrandUp.FileStorage.Tests
 
             var isDeleted = await client.DeleteFileAsync(fileinfo.FileId, CancellationToken.None);
             Assert.True(isDeleted);
+
+            await Assert.ThrowsAsync<NotFoundException>(async () => await client.GetFileInfoAsync(fileinfo.FileId, CancellationToken.None));
         }
 
         #region Virtual members

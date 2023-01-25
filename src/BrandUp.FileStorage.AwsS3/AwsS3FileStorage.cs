@@ -50,6 +50,7 @@ namespace BrandUp.FileStorage.AwsS3
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         public async Task<FileInfo<TMetadata>> UploadFileAsync(Guid fileId, TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
         {
             using var ms = new MemoryStream();
@@ -85,6 +86,7 @@ namespace BrandUp.FileStorage.AwsS3
                 throw ex.StatusCode switch
                 {
                     System.Net.HttpStatusCode.Forbidden => new AccessDeniedException(ex),
+                    System.Net.HttpStatusCode.Conflict => new ArgumentException($"File with key {fileId} already exist"),
                     _ => new IntegrationException(ex),
                 };
             }
@@ -97,6 +99,9 @@ namespace BrandUp.FileStorage.AwsS3
         /// <param name="fileStream">Stream of saving file</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Information of file with metadata</returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="AccessDeniedException"></exception>
+        /// <exception cref="IntegrationException"></exception>
         public Task<FileInfo<TMetadata>> UploadFileAsync(TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
              => UploadFileAsync(Guid.NewGuid(), fileInfo, fileStream, cancellationToken);
 
@@ -106,6 +111,7 @@ namespace BrandUp.FileStorage.AwsS3
         /// <param name="fileId">Id of file</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Information of file with metadata</returns>
+        /// <exception cref="NotFoundException"></exception>
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
         public async Task<FileInfo<TMetadata>> GetFileInfoAsync(Guid fileId, CancellationToken cancellationToken = default)
@@ -125,7 +131,7 @@ namespace BrandUp.FileStorage.AwsS3
             {
                 return ex.StatusCode switch
                 {
-                    System.Net.HttpStatusCode.NotFound => null,
+                    System.Net.HttpStatusCode.NotFound => throw new NotFoundException(fileId),
                     System.Net.HttpStatusCode.Forbidden => throw new AccessDeniedException(ex),
                     _ => throw new IntegrationException(ex)
                 };
@@ -138,9 +144,9 @@ namespace BrandUp.FileStorage.AwsS3
         /// <param name="fileId">Id of file</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>File stream</returns>
-        /// <exception cref="NotFoundException"></exception>
-        /// <exception cref="AccessDeniedException"></exception>
-        /// <exception cref="IntegrationException"></exception>
+        /// <exception cref="NotFoundException">If file does not exist in storage</exception>
+        /// <exception cref="AccessDeniedException">If user have not permisions to read file</exception>
+        /// <exception cref="IntegrationException">Other storage exeptions</exception>
         public async Task<Stream> ReadFileAsync(Guid fileId, CancellationToken cancellationToken = default)
         {
             try
@@ -157,7 +163,7 @@ namespace BrandUp.FileStorage.AwsS3
             {
                 return ex.StatusCode switch
                 {
-                    System.Net.HttpStatusCode.NotFound => throw new NotFoundException(ex),
+                    System.Net.HttpStatusCode.NotFound => throw new NotFoundException(fileId),
                     System.Net.HttpStatusCode.Forbidden => throw new AccessDeniedException(ex),
                     _ => throw new IntegrationException(ex)
                 };
@@ -170,6 +176,7 @@ namespace BrandUp.FileStorage.AwsS3
         /// <param name="fileId">Id of file</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>true - if file deletes, false - if not</returns>
+        /// <exception cref="NotFoundException"></exception>
         /// <exception cref="IntegrationException"></exception>
         public async Task<bool> DeleteFileAsync(Guid fileId, CancellationToken cancellationToken = default)
         {
@@ -187,7 +194,7 @@ namespace BrandUp.FileStorage.AwsS3
             {
                 return ex.StatusCode switch
                 {
-                    System.Net.HttpStatusCode.NotFound => false,
+                    System.Net.HttpStatusCode.NotFound => throw new NotFoundException(fileId),
                     System.Net.HttpStatusCode.Forbidden => false,
                     _ => throw new IntegrationException(ex)
                 };
