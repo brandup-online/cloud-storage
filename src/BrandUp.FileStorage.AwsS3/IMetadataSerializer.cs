@@ -1,6 +1,8 @@
 ﻿using Amazon.S3.Model;
+using BrandUp.FileStorage.Attributes;
 using BrandUp.FileStorage.Builder;
 using System.ComponentModel;
+using System.Reflection;
 using System.Runtime.Serialization;
 
 namespace BrandUp.FileStorage.AwsS3
@@ -46,11 +48,15 @@ namespace BrandUp.FileStorage.AwsS3
             {
                 var converter = TypeDescriptor.GetConverter(property.Property.PropertyType);
 
-                var key = metadataKey + "-" + string.Join("-", ToOnlyFirstIsUpper(property.FullPropertyName.Split("."))); ;
-                if (property.Property.PropertyType == typeof(string))
-                    SetPropertyValue(fileMetadata, property.FullPropertyName, DecodeFileName(response.Metadata[key]));
-                else
-                    SetPropertyValue(fileMetadata, property.FullPropertyName, converter.ConvertFrom(response.Metadata[key]));
+                var key = metadataKey + "-" + string.Join("-", ToOnlyFirstIsUpper(property.FullPropertyName.Split(".")));
+                var value = response.Metadata[key];
+                if (value != null)
+                {
+                    if (property.Property.PropertyType == typeof(string))
+                        SetPropertyValue(fileMetadata, property.FullPropertyName, DecodeFileName(value));
+                    else
+                        SetPropertyValue(fileMetadata, property.FullPropertyName, converter.ConvertFrom(value));
+                }
             }
 
             return fileMetadata;
@@ -81,8 +87,8 @@ namespace BrandUp.FileStorage.AwsS3
 
         static object GetPropertyValue(object src, string propName)
         {
-            if (src == null) throw new ArgumentException("Value cannot be null.", "src");
-            if (propName == null) throw new ArgumentException("Value cannot be null.", "propName");
+            if (src == null) throw new ArgumentException("Value cannot be null.", nameof(src));
+            if (propName == null) throw new ArgumentException("Value cannot be null.", nameof(propName));
 
             if (propName.Contains("."))//complex type nested
             {
@@ -91,20 +97,20 @@ namespace BrandUp.FileStorage.AwsS3
             }
             else
             {
-                var prop = src.GetType().GetProperty(propName);
-                return prop != null ? prop.GetValue(src, null) : null;
+                var prop = GetProperty(src, propName);
+                return prop.GetValue(src, null);
             }
         }
 
         static void SetPropertyValue(object src, string propName, object value)
         {
-            if (src == null) throw new ArgumentException("Value cannot be null.", "src");
-            if (propName == null) throw new ArgumentException("Value cannot be null.", "propName");
+            if (src == null) throw new ArgumentException("Value cannot be null.", nameof(src));
+            if (propName == null) throw new ArgumentException("Value cannot be null.", nameof(propName));
 
             if (propName.Contains(".")) // complex type nested
             {
                 var temp = propName.Split(new char[] { '.' }, 2);
-                var prop = src.GetType().GetProperty(temp[0]);
+                var prop = GetProperty(src, temp[0]);
 
                 var nestedObj = prop.GetValue(src, null);
                 if (nestedObj == null)
@@ -117,7 +123,7 @@ namespace BrandUp.FileStorage.AwsS3
             }
             else
             {
-                var prop = src.GetType().GetProperty(propName);
+                var prop = GetProperty(src, propName);
                 prop.SetValue(src, value);
             }
         }
@@ -145,6 +151,30 @@ namespace BrandUp.FileStorage.AwsS3
                 result.Add(value[0] + value[1..].ToLowerInvariant());
 
             return result.ToArray();
+        }
+
+        static PropertyInfo GetProperty(object obj, string propName)
+        {
+            var type = obj.GetType();
+            var prop = type.GetProperty(propName);
+            if (prop != null)
+                return prop;
+            else
+            {
+                var properties = type.GetProperties();
+                foreach (var property in properties)
+                {
+                    var attr = property.GetCustomAttribute<MetadataKeyAttribute>();
+
+                    if (attr == null)
+                        continue;
+
+                    if (attr.MetadataKey == propName)
+                        return type.GetProperty(property.Name);
+                }
+
+                throw new ArgumentException(nameof(propName));
+            }
         }
 
         #endregion

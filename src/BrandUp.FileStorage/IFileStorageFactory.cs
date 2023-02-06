@@ -32,6 +32,7 @@ namespace BrandUp.FileStorage
            => builder.ConfigurationCache[typeof(TConfigType)].CreateInstanse<TFileType>(provider);
 
     }
+
     /// <summary>
     /// Factory class for IFileStorage
     /// </summary>

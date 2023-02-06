@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using BrandUp.FileStorage.Attributes;
+using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
 namespace BrandUp.FileStorage.Builder
@@ -91,26 +92,30 @@ namespace BrandUp.FileStorage.Builder
         #endregion
 
         #region Helpers 
+
         void GeneratePropertyCollection(PropertyCacheCollection collection, PropertyInfo[] properties, string name = default)
         {
             foreach (var prop in properties)
             {
+                var key = prop.GetCustomAttribute<MetadataKeyAttribute>()?.MetadataKey ?? prop.Name;
+
                 if (!prop.PropertyType.IsSerializable)
                 {
                     if (name == null)
-                        GeneratePropertyCollection(collection, prop.PropertyType.GetProperties(), prop.Name);
+                        GeneratePropertyCollection(collection, prop.PropertyType.GetProperties(), key);
                     else
-                        GeneratePropertyCollection(collection, prop.PropertyType.GetProperties(), name + "." + prop.Name);
+                        GeneratePropertyCollection(collection, prop.PropertyType.GetProperties(), name + "." + key);
                 }
                 else
                 {
                     if (name != null)
-                        collection.Add(name + "." + prop.Name, prop);
+                        collection.Add(name + "." + key, prop);
                     else
-                        collection.Add(prop.Name, prop);
+                        collection.Add(key, prop);
                 }
             }
         }
+
         #endregion
     }
 
@@ -140,7 +145,6 @@ namespace BrandUp.FileStorage.Builder
         /// <returns>Same instance of builder</returns>
         FileStorageBuilder AddConfiguration<TConfig>(Type storageType, TConfig configuration) where TConfig : class;
 
-
         /// <summary>
         /// Adds file type with it configuration to builder
         /// </summary>
@@ -148,7 +152,5 @@ namespace BrandUp.FileStorage.Builder
         /// <param name="configuration">Configuration for this file</param>
         /// <returns>Same instance of builder</returns>
         FileStorageBuilder AddFileToStorage<TFile>(object configuration) where TFile : class, new();
-
-
     }
 }

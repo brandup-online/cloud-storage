@@ -45,7 +45,8 @@ namespace BrandUp.FileStorage.Folder
         /// <exception cref="ArgumentException"></exception>
         public async Task<FileInfo<TFile>> UploadFileAsync(Guid fileId, TFile fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
         {
-            var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString() + "." + fileInfo.Extension);
+            var ext = Path.GetExtension(fileInfo.FileName);
+            var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString() + "." + ext);
             var metadataPath = Path.Combine(folderConfiguration.MetadataPath, fileId.ToString() + ".json");
 
             if (fileStream.Length == 0)
@@ -122,8 +123,9 @@ namespace BrandUp.FileStorage.Folder
                     using var reader = new StreamReader(metadata);
                     var json = await reader.ReadToEndAsync();
                     var data = JsonConvert.DeserializeObject<TFile>(json);
+                    var ext = Path.GetExtension(data.FileName);
 
-                    var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString() + "." + data.Extension);
+                    var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString() + "." + ext);
 
                     return new FileInfo<TFile>()
                     {
@@ -141,7 +143,7 @@ namespace BrandUp.FileStorage.Folder
                     throw new IntegrationException(ex);
                 }
             }
-            else throw new NotFoundException(new ArgumentException($"File or metadata with key {fileId} does not exist"));
+            else return null;
         }
 
         /// <summary>
@@ -160,7 +162,8 @@ namespace BrandUp.FileStorage.Folder
             {
                 try
                 {
-                    var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString() + "." + fileinfo.Metadata.Extension);
+                    var ext = Path.GetExtension(fileinfo.Metadata.FileName);
+                    var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString() + "." + ext);
                     using var file = File.OpenRead(filePath);
 
                     var ms = new MemoryStream();
@@ -193,7 +196,9 @@ namespace BrandUp.FileStorage.Folder
             var fileInfo = await GetFileInfoAsync(fileId, cancellationToken);
 
             var metadataPath = Path.Combine(folderConfiguration.MetadataPath, fileId.ToString() + ".json");
-            var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString() + "." + fileInfo.Metadata.Extension);
+
+            var ext = Path.GetExtension(fileInfo.Metadata.FileName);
+            var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString() + "." + ext);
 
             if (File.Exists(metadataPath) && File.Exists(filePath))
             {

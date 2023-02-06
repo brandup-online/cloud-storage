@@ -1,5 +1,4 @@
 ﻿using BrandUp.FileStorage.AwsS3;
-using BrandUp.FileStorage.Exceptions;
 using BrandUp.FileStorage.Folder;
 using BrandUp.FileStorage.Tests._fakes;
 using Microsoft.Extensions.Configuration;
@@ -29,7 +28,10 @@ namespace BrandUp.FileStorage.Tests
             var builder = services.AddFileStorage();
 
             builder.AddAwsS3Storage(config.GetSection("TestCloudStorage:Default"))
-                    .AddAwsS3Bucket<FakeFile>(o => config.GetSection("TestCloudStorage:FakeFile").Bind(o));
+                    .AddAwsS3Bucket<FakeFile>(o => config.GetSection("TestCloudStorage:FakeFile").Bind(o))
+                    .AddAwsS3Bucket<AttributedFakeFile>(o => config.GetSection("TestCloudStorage:FakeFile").Bind(o))
+                    .AddAwsS3Bucket<FakeMetadataOld>(o => config.GetSection("TestCloudStorage:FakeFile").Bind(o))
+                    .AddAwsS3Bucket<FakeMetadataNew>(o => config.GetSection("TestCloudStorage:FakeFile").Bind(o));
 
             builder.AddFolderStorage(config.GetSection("TestFolderStorage:Default"))
                   .AddFolderFor<FakeFile>(o => config.GetSection("TestFolderStorage:FakeFile").Bind(o));
@@ -73,8 +75,8 @@ namespace BrandUp.FileStorage.Tests
             Assert.Equal(inputMetadata.Extension, downloadedMetadata.Extension);
             Assert.Equal(inputMetadata.FakeInt, downloadedMetadata.FakeInt);
             Assert.Equal(inputMetadata.FakeTimeSpan, downloadedMetadata.FakeTimeSpan);
-            Assert.Equal(inputMetadata.FakeInnner.FakeGuid, downloadedMetadata.FakeInnner.FakeGuid);
-            Assert.Equal(inputMetadata.FakeInnner.FakeBool, downloadedMetadata.FakeInnner.FakeBool);
+            Assert.Equal(inputMetadata.FakeInner.FakeGuid, downloadedMetadata.FakeInner.FakeGuid);
+            Assert.Equal(inputMetadata.FakeInner.FakeBool, downloadedMetadata.FakeInner.FakeBool);
             Assert.Equal(inputMetadata.FakeDateTime, downloadedMetadata.FakeDateTime);
 
             Assert.Equal(stream.Length, getFileinfo.Size);
@@ -86,7 +88,7 @@ namespace BrandUp.FileStorage.Tests
             var isDeleted = await client.DeleteFileAsync(fileinfo.FileId, CancellationToken.None);
             Assert.True(isDeleted);
 
-            await Assert.ThrowsAsync<NotFoundException>(async () => await client.GetFileInfoAsync(fileinfo.FileId, CancellationToken.None));
+            Assert.Null(await client.GetFileInfoAsync(fileinfo.FileId, CancellationToken.None));
         }
 
         #region Virtual members

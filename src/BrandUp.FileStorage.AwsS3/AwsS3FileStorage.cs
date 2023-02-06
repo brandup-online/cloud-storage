@@ -111,7 +111,6 @@ namespace BrandUp.FileStorage.AwsS3
         /// <param name="fileId">Id of file</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Information of file with metadata</returns>
-        /// <exception cref="NotFoundException"></exception>
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
         public async Task<FileInfo<TMetadata>> GetFileInfoAsync(Guid fileId, CancellationToken cancellationToken = default)
@@ -131,7 +130,7 @@ namespace BrandUp.FileStorage.AwsS3
             {
                 return ex.StatusCode switch
                 {
-                    System.Net.HttpStatusCode.NotFound => throw new NotFoundException(fileId),
+                    System.Net.HttpStatusCode.NotFound => null,
                     System.Net.HttpStatusCode.Forbidden => throw new AccessDeniedException(ex),
                     _ => throw new IntegrationException(ex)
                 };
@@ -176,7 +175,6 @@ namespace BrandUp.FileStorage.AwsS3
         /// <param name="fileId">Id of file</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>true - if file deletes, false - if not</returns>
-        /// <exception cref="NotFoundException"></exception>
         /// <exception cref="IntegrationException"></exception>
         public async Task<bool> DeleteFileAsync(Guid fileId, CancellationToken cancellationToken = default)
         {
@@ -194,7 +192,7 @@ namespace BrandUp.FileStorage.AwsS3
             {
                 return ex.StatusCode switch
                 {
-                    System.Net.HttpStatusCode.NotFound => throw new NotFoundException(fileId),
+                    System.Net.HttpStatusCode.NotFound => false,
                     System.Net.HttpStatusCode.Forbidden => false,
                     _ => throw new IntegrationException(ex)
                 };

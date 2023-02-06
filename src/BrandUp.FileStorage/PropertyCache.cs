@@ -28,6 +28,7 @@ namespace BrandUp.FileStorage
         }
 
         #region IEnumerable implementation
+
         /// <summary>
         /// 
         /// </summary>

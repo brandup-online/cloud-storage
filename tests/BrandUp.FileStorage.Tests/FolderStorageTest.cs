@@ -23,10 +23,9 @@ namespace BrandUp.FileStorage.Tests
 
             await DoCRUD(client, new FakeFile
             {
-                FakeInnner = new() { FakeGuid = Guid.NewGuid(), FakeBool = true },
-                FileName = "string",
-                Extension = "png",
-                FakeDateTime = new DateTime(2002, 12, 15, 13, 45, 0),// Default type converter have accuracy to minute
+                FakeInner = new() { FakeGuid = Guid.NewGuid(), FakeBool = true },
+                FileName = "string.png",
+                FakeDateTime = new DateTime(2002, 12, 15, 13, 45, 0),// Default type converter have minute accuracy 
                 FakeInt = 21332,
                 FakeTimeSpan = TimeSpan.FromSeconds(127)
             }, stream);
