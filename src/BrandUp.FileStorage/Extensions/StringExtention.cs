@@ -8,7 +8,7 @@ namespace BrandUp.FileStorage
     /// </summary>
     internal static class StringExtention
     {
-        static readonly Regex r = new("[a-z]+");
+        static readonly Regex r = new("[a-zA-Z0-9]+");
 
         /// <summary>
         /// Convert string to pascal case.
@@ -17,11 +17,12 @@ namespace BrandUp.FileStorage
         /// <returns></returns>
         public static string ToPascalCase(this string str)
         {
-            str = str.ToLower();
             var matchCollection = r.Matches(str);
 
             TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
             string returnString = string.Empty;
+            if (matchCollection.Count == 1)
+                return matchCollection[0].Value;
             foreach (Match match in matchCollection)
             {
                 returnString += textInfo.ToTitleCase(match.Value);

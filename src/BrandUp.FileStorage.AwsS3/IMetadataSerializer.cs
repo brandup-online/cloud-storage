@@ -4,6 +4,7 @@ using BrandUp.FileStorage.Builder;
 using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.Serialization;
+using System.Text;
 
 namespace BrandUp.FileStorage.AwsS3
 {
@@ -48,7 +49,7 @@ namespace BrandUp.FileStorage.AwsS3
             {
                 var converter = TypeDescriptor.GetConverter(property.Property.PropertyType);
 
-                var key = metadataKey + "-" + string.Join("-", ToOnlyFirstIsUpper(property.FullPropertyName.Split(".")));
+                var key = metadataKey + "-" + string.Join("-", ToTrainCase(property.FullPropertyName.Replace(".", "")));
                 var value = response.Metadata[key];
                 if (value != null)
                 {
@@ -74,10 +75,13 @@ namespace BrandUp.FileStorage.AwsS3
             foreach (var property in metadataProperties)
             {
                 var converter = TypeDescriptor.GetConverter(property.Property.PropertyType);
+                var value = converter.ConvertToString(GetPropertyValue(fileInfo, property.FullPropertyName));
+                var key = ToTrainCase(property.FullPropertyName.Replace(".", ""));
+
                 if (property.Property.PropertyType == typeof(string))
-                    metadata.Add(metadataKey + "-" + property.FullPropertyName.Replace(".", "-"), EncodeFileName(converter.ConvertToString(GetPropertyValue(fileInfo, property.FullPropertyName))));
+                    metadata.Add(metadataKey + "-" + key, EncodeFileName(value));
                 else
-                    metadata.Add(metadataKey + "-" + property.FullPropertyName.Replace(".", "-"), converter.ConvertToString(GetPropertyValue(fileInfo, property.FullPropertyName)));
+                    metadata.Add(metadataKey + "-" + key, value);
             }
 
             return metadata;
@@ -90,7 +94,7 @@ namespace BrandUp.FileStorage.AwsS3
             if (src == null) throw new ArgumentException("Value cannot be null.", nameof(src));
             if (propName == null) throw new ArgumentException("Value cannot be null.", nameof(propName));
 
-            if (propName.Contains("."))//complex type nested
+            if (propName.Contains('.')) // complex type nested
             {
                 var temp = propName.Split(new char[] { '.' }, 2);
                 return GetPropertyValue(GetPropertyValue(src, temp[0]), temp[1]);
@@ -175,6 +179,53 @@ namespace BrandUp.FileStorage.AwsS3
 
                 throw new ArgumentException(nameof(propName));
             }
+        }
+
+        static string ToTrainCase(string str)
+        {
+            if (str is null) return null;
+
+            if (str.Length == 0) return string.Empty;
+
+            StringBuilder builder = new StringBuilder();
+
+            for (var i = 0; i < str.Length; i++)
+            {
+                if (i == 0) // if current char is the first char 
+                {
+                    builder.Append(char.ToUpper(str[i]));
+                }
+                else if (str[i] == '-')
+                    continue;
+                else if (char.IsLower(str[i])) // if current char is already lowercase
+                {
+                    builder.Append(str[i]);
+                }
+                else if (char.IsDigit(str[i]) && !char.IsDigit(str[i - 1])) // if current char is a number and the previous is not
+                {
+                    builder.Append('-');
+                    builder.Append(str[i]);
+                }
+                else if (char.IsDigit(str[i])) // if current char is a number and previous is
+                {
+                    builder.Append(str[i]);
+                }
+                else if (char.IsLower(str[i - 1])) // if current char is upper and previous char is lower
+                {
+                    builder.Append('-');
+                    builder.Append(str[i]);
+                }
+                else if (i + 1 == str.Length || char.IsUpper(str[i + 1])) // if current char is upper and next char doesn't exist or is upper
+                {
+                    builder.Append(char.ToLower(str[i]));
+                }
+                else // if current char is upper and next char is lower
+                {
+                    builder.Append('-');
+                    builder.Append(str[i]);
+                }
+            }
+            return builder.ToString();
         }
 
         #endregion
