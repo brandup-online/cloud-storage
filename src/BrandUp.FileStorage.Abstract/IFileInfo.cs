@@ -1,12 +1,10 @@
-﻿using BrandUp.FileStorage.Abstract;
-
-namespace BrandUp.FileStorage
+﻿namespace BrandUp.FileStorage.Abstract
 {
     /// <summary>
     /// Class with informations about file
     /// </summary>
     /// <typeparam name="T">Metadata type</typeparam>
-    public class FileInfo<T> : IFileInfo<T> where T : class, IFileMetadata, new()
+    public interface IFileInfo<T> where T : class, IFileMetadata, new()
     {
         /// <summary>
         /// Id of the file that can be used to get the file from storage

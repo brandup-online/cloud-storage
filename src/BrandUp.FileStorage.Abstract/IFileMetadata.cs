@@ -1,4 +1,4 @@
-﻿namespace BrandUp.FileStorage
+﻿namespace BrandUp.FileStorage.Abstract
 {
     /// <summary>
     /// Interface of metadata

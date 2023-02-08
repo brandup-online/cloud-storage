@@ -1,4 +1,5 @@
-﻿using BrandUp.FileStorage.Attributes;
+﻿using BrandUp.FileStorage.Abstract;
+using BrandUp.FileStorage.Attributes;
 
 namespace BrandUp.FileStorage.Tests._fakes
 {

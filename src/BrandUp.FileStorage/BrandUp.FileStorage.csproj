@@ -23,4 +23,8 @@
     <PackageReference Include="Microsoft.Extensions.Options" Version="7.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\BrandUp.FileStorage.Abstract\BrandUp.FileStorage.Abstract.csproj" />
+  </ItemGroup>
+
 </Project>

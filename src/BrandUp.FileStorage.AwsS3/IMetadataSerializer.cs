@@ -1,6 +1,6 @@
 ﻿using Amazon.S3.Model;
+using BrandUp.FileStorage.Abstract;
 using BrandUp.FileStorage.Attributes;
-using BrandUp.FileStorage.Builder;
 using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -15,14 +15,14 @@ namespace BrandUp.FileStorage.AwsS3
     public class MetadataSerializer<TMetadata> : IMetadataSerializer<TMetadata> where TMetadata : class, IFileMetadata, new()
     {
         const string MetadataPrefix = "X-Amz-Meta";
-        readonly PropertyCacheCollection metadataProperties;
+        readonly IEnumerable<IPropertyCache> metadataProperties;
 
-        public MetadataSerializer(IFileStorageBuilder builder)
+        public MetadataSerializer(IFileDefinitionsDictionary fileDefinitions)
         {
-            if (builder == null)
-                throw new ArgumentNullException(nameof(builder));
+            if (fileDefinitions == null)
+                throw new ArgumentNullException(nameof(fileDefinitions));
 
-            if (!builder.Properties.TryGetValue(typeof(TMetadata), out metadataProperties))
+            if (!fileDefinitions.TryGetProperties(typeof(TMetadata), out metadataProperties))
                 throw new ArgumentException(typeof(TMetadata).Name);
         }
 

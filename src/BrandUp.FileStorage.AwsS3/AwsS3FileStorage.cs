@@ -1,6 +1,7 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
+using BrandUp.FileStorage.Abstract;
 using BrandUp.FileStorage.AwsS3.Configuration;
 using BrandUp.FileStorage.Exceptions;
 
@@ -51,7 +52,7 @@ namespace BrandUp.FileStorage.AwsS3
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
         /// <exception cref="ArgumentException"></exception>
-        public async Task<FileInfo<TMetadata>> UploadFileAsync(Guid fileId, TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
+        public async Task<IFileInfo<TMetadata>> UploadFileAsync(Guid fileId, TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
         {
             using var ms = new MemoryStream();
             await fileStream.CopyToAsync(ms, cancellationToken);
@@ -102,7 +103,7 @@ namespace BrandUp.FileStorage.AwsS3
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
-        public Task<FileInfo<TMetadata>> UploadFileAsync(TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
+        public Task<IFileInfo<TMetadata>> UploadFileAsync(TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
              => UploadFileAsync(Guid.NewGuid(), fileInfo, fileStream, cancellationToken);
 
         /// <summary>
@@ -113,7 +114,7 @@ namespace BrandUp.FileStorage.AwsS3
         /// <returns>Information of file with metadata</returns>
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
-        public async Task<FileInfo<TMetadata>> GetFileInfoAsync(Guid fileId, CancellationToken cancellationToken = default)
+        public async Task<IFileInfo<TMetadata>> GetFileInfoAsync(Guid fileId, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -124,7 +125,7 @@ namespace BrandUp.FileStorage.AwsS3
 
                 }, cancellationToken);
 
-                return new() { FileId = fileId, Size = response.ContentLength, Metadata = metadataSerializer.Deserialize(fileId, response) };
+                return new FileInfo<TMetadata>() { FileId = fileId, Size = response.ContentLength, Metadata = metadataSerializer.Deserialize(fileId, response) };
             }
             catch (AmazonS3Exception ex)
             {

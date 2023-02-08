@@ -1,4 +1,5 @@
-﻿using BrandUp.FileStorage.AwsS3;
+﻿using BrandUp.FileStorage.Abstract;
+using BrandUp.FileStorage.AwsS3;
 using BrandUp.FileStorage.Folder;
 using BrandUp.FileStorage.Tests._fakes;
 using Microsoft.Extensions.Configuration;
@@ -27,14 +28,13 @@ namespace BrandUp.FileStorage.Tests
 
             var builder = services.AddFileStorage();
 
-            builder
-                .AddAwsS3Storage(options => { })
-                    .AddAwsS3Bucket<FakeFile>("FakeFile2")
-                    .AddAwsS3Bucket<AttributedFakeFile>(o => config.GetSection("TestCloudStorage:FakeFile").Bind(o))
-                    .AddAwsS3Bucket<FakeMetadataOld>(o => config.GetSection("TestCloudStorage:FakeFile").Bind(o))
-                    .AddAwsS3Bucket<FakeMetadataNew>(o => config.GetSection("TestCloudStorage:FakeFile").Bind(o));
+            builder.AddAwsS3Storage(o => config.GetSection("TestCloudStorage").Bind(o))
+                    .AddAwsS3Bucket<FakeFile>()
+                    .AddAwsS3Bucket<AttributedFakeFile>("FakeFile")
+                    .AddAwsS3Bucket<FakeMetadataOld>("FakeFile")
+                    .AddAwsS3Bucket<FakeMetadataNew>("FakeFile");
 
-            builder.AddFolderStorage(config.GetSection("TestFolderStorage:Default"))
+            builder.AddFolderStorage(o => config.GetSection("TestFolderStorage:Default").Bind(o))
                   .AddFolderFor<FakeFile>(o => config.GetSection("TestFolderStorage:FakeFile").Bind(o));
 
             OnConfigure(services);

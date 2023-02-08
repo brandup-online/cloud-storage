@@ -1,31 +1,25 @@
-﻿using BrandUp.FileStorage.Attributes;
+﻿using BrandUp.FileStorage.Abstract;
 using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
 
 namespace BrandUp.FileStorage.Builder
 {
     /// <summary>
     /// Implementation of IFileStorageBuilder
     /// </summary>
-    public class FileStorageBuilder : IFileStorageBuilder
+    public class FileStorageBuilder : IFileStorageBuilder, IFileDefinitionsDictionary
     {
-        readonly IDictionary<Type, ConfigurationCache> configurationCache;
-
-        /// <summary>
-        /// Dictionary where key is type of metadata property and value is collection of properties of this type 
-        /// </summary>
-        public IDictionary<Type, FileMetadataDefinition> Properties { get; init; }
-        IDictionary<Type, ConfigurationCache> IFileStorageBuilder.ConfigurationCache => configurationCache; // Type is config type
+        readonly IDictionary<Type, object> configurations; // Type is IFileStorage Type
+        readonly IDictionary<Type, FileMetadataDefinition> properties;// Type is IFileMetadata File
 
         public FileStorageBuilder(IServiceCollection services)
         {
-            Properties = new Dictionary<Type, FileMetadataDefinition>();
+            properties = new Dictionary<Type, FileMetadataDefinition>();
+            configurations = new Dictionary<Type, object>();
+
             Services = services ?? throw new ArgumentNullException(nameof(services));
 
-            configurationCache = new Dictionary<Type, ConfigurationCache>();
-
             Services.AddScoped<IFileStorageFactory, FileStorageFactory>();
-            Services.AddSingleton<IFileStorageBuilder, FileStorageBuilder>(f => this);
+            Services.AddSingleton<IFileDefinitionsDictionary>(f => this);
         }
 
         #region IFileStorageBuilder members
@@ -38,18 +32,20 @@ namespace BrandUp.FileStorage.Builder
         /// <summary>
         /// Adds a new cofiguration for client 
         /// </summary>
-        /// <typeparam name="TConfig">Configuration type</typeparam>
         /// <param name="storageType">Type of storage for which added configuration</param>
         /// <param name="configuration">Configuration object</param>
         /// <returns>Same instance of builder</returns>
         /// <exception cref="ArgumentException"></exception>
-        public FileStorageBuilder AddConfiguration<TConfig>(Type storageType, TConfig configuration) where TConfig : class
+        public IFileStorageBuilder AddStorage(Type storageType, object configuration)
         {
-            var configType = typeof(TConfig);
+            if (storageType == null)
+                throw new ArgumentNullException(nameof(storageType));
+            if (!storageType.IsAssignableTo(typeof(IFileStorage<>)))
+                throw new ArgumentException($"{nameof(storageType)} must be assignable to {typeof(IFileStorage<>)}");
+            if (configuration == null)
+                throw new ArgumentNullException(nameof(configuration));
 
-            var cache = new ConfigurationCache(storageType, configType, configuration);
-
-            if (!configurationCache.TryAdd(configType, cache))
+            if (!configurations.TryAdd(storageType, configuration))
                 throw new ArgumentException($"Configuration for {storageType} already exist");
 
             return this;
@@ -59,82 +55,61 @@ namespace BrandUp.FileStorage.Builder
         /// Adds file type with it configuration to builder
         /// </summary>
         /// <typeparam name="TFile">file type to add</typeparam>
+        /// <param name="storageType">Type of storage for file</param>
         /// <param name="configuration">Configuration for this file</param>
         /// <returns>Same instance of builder</returns>
         /// <exception cref="ArgumentException">Throws if type of configuration not added to builder yet</exception>
-        public FileStorageBuilder AddFileToStorage<TFile>(object configuration) where TFile : class, new()
+        public IFileStorageBuilder AddFileToStorage<TFile>(Type storageType, object configuration) where TFile : class, new()
         {
+            if (storageType == null)
+                throw new ArgumentNullException(nameof(storageType));
+            if (!storageType.IsAssignableTo(typeof(IFileStorage<>)))
+                throw new ArgumentException($"{nameof(storageType)} must be assignable to {typeof(IFileStorage<>)}");
+            if (configuration == null)
+                throw new ArgumentNullException(nameof(configuration));
+
             var fileType = typeof(TFile);
-            if (Properties.ContainsKey(fileType))
+            if (properties.ContainsKey(fileType))
                 throw new InvalidOperationException();
 
-            var configType = configuration.GetType();
-
-            if (configurationCache.TryGetValue(configType, out var cache))
-                cache.Add(fileType, configuration);
-            else
-                throw new ArgumentException("Unknown configuration. First you need add this configuration to builder");
-
             var fileTypeDefinition = new FileMetadataDefinition(fileType);
-            Properties.Add(fileTypeDefinition.MetadataFileType, fileTypeDefinition);
+            properties.Add(fileTypeDefinition.MetadataFileType, fileTypeDefinition);
 
             return this;
         }
 
         #endregion
 
-        #region Helpers 
+        #region IFileDefinitionsDictionary members
 
-        void GeneratePropertyCollection(PropertyCacheCollection collection, Type type, string parentName = default)
+        public bool TryGetConstructor(Type type, out IStorageInstanceCreator value)
         {
-            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.SetProperty);
-            foreach (var property in properties)
-            {
-                var propertyName = property.GetCustomAttribute<MetadataKeyAttribute>()?.Name ?? property.Name;
-                var metadataName = parentName == null ? propertyName : parentName + "." + propertyName;
+            if (properties.TryGetValue(type, out var property))
+                if (property is FileMetadataDefinition metadataDefinition)
+                {
+                    value = metadataDefinition;
+                    return true;
+                }
 
-                if (!property.PropertyType.IsSerializable)
-                    GeneratePropertyCollection(collection, property.PropertyType, metadataName);
-                else
-                    collection.AddProperty(metadataName, property);
-            }
+            value = null;
+            return false;
+        }
+
+        public bool TryGetProperties(Type type, out IEnumerable<IPropertyCache> value)
+        {
+            if (properties.TryGetValue(type, out var property))
+                if (property is IEnumerable<IPropertyCache> metadataDefinition)
+                {
+                    value = metadataDefinition;
+                    return true;
+                }
+
+            value = null;
+            return false;
         }
 
         #endregion
     }
 
-    /// <summary>
-    /// Storage constructor. Storage and configurations for it are added here
-    /// </summary>
-    public interface IFileStorageBuilder
-    {
-        /// <summary>
-        /// Service collection property
-        /// </summary>
-        IServiceCollection Services { get; set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        IDictionary<Type, PropertyCacheCollection> Properties { get; } // Type is file type
-
-        internal IDictionary<Type, ConfigurationCache> ConfigurationCache { get; }
-
-        /// <summary>
-        /// Adds a new cofiguration for client 
-        /// </summary>
-        /// <typeparam name="TConfig">Configuration type</typeparam>
-        /// <param name="storageType">Type of storage for which added configuration</param>
-        /// <param name="configuration">Configuration object</param>
-        /// <returns>Same instance of builder</returns>
-        FileStorageBuilder AddConfiguration<TConfig>(Type storageType, TConfig configuration) where TConfig : class;
-
-        /// <summary>
-        /// Adds file type with it configuration to builder
-        /// </summary>
-        /// <typeparam name="TFile">file type to add</typeparam>
-        /// <param name="configuration">Configuration for this file</param>
-        /// <returns>Same instance of builder</returns>
-        FileStorageBuilder AddFileToStorage<TFile>(object configuration) where TFile : class, new();
-    }
 }

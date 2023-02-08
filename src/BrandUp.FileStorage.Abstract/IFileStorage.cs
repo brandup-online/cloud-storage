@@ -1,6 +1,4 @@
-﻿using BrandUp.FileStorage.Exceptions;
-
-namespace BrandUp.FileStorage
+﻿namespace BrandUp.FileStorage.Abstract
 {
     /// <summary>
     /// Interface for work with the storage.
@@ -19,7 +17,7 @@ namespace BrandUp.FileStorage
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
         /// <exception cref="ArgumentException"></exception>
-        Task<FileInfo<TMetadata>> UploadFileAsync(TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default);
+        Task<IFileInfo<TMetadata>> UploadFileAsync(TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default);
         /// <summary>
         /// Uploads file to the store with predefined id
         /// </summary>
@@ -32,7 +30,7 @@ namespace BrandUp.FileStorage
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
         /// <exception cref="ArgumentException"></exception>
-        Task<FileInfo<TMetadata>> UploadFileAsync(Guid fileId, TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default);
+        Task<IFileInfo<TMetadata>> UploadFileAsync(Guid fileId, TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default);
         /// <summary>
         /// Gets metadata of file
         /// </summary>
@@ -42,7 +40,7 @@ namespace BrandUp.FileStorage
         /// <exception cref="NotFoundException"></exception>
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
-        Task<FileInfo<TMetadata>> GetFileInfoAsync(Guid fileId, CancellationToken cancellationToken = default);
+        Task<IFileInfo<TMetadata>> GetFileInfoAsync(Guid fileId, CancellationToken cancellationToken = default);
         /// <summary>
         /// Reads file from storage
         /// </summary>

@@ -1,4 +1,5 @@
-﻿using BrandUp.FileStorage.Exceptions;
+﻿using BrandUp.FileStorage.Abstract;
+using BrandUp.FileStorage.Exceptions;
 using BrandUp.FileStorage.Folder.Configuration;
 using Newtonsoft.Json;
 using System.Text;
@@ -43,7 +44,7 @@ namespace BrandUp.FileStorage.Folder
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
         /// <exception cref="ArgumentException"></exception>
-        public async Task<FileInfo<TFile>> UploadFileAsync(Guid fileId, TFile fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
+        public async Task<IFileInfo<TFile>> UploadFileAsync(Guid fileId, TFile fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
         {
             var ext = Path.GetExtension(fileInfo.FileName);
             var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString() + "." + ext);
@@ -99,7 +100,7 @@ namespace BrandUp.FileStorage.Folder
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
         /// <exception cref="ArgumentException"></exception>
-        public Task<FileInfo<TFile>> UploadFileAsync(TFile fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
+        public Task<IFileInfo<TFile>> UploadFileAsync(TFile fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
             => UploadFileAsync(Guid.NewGuid(), fileInfo, fileStream, cancellationToken);
 
         /// <summary>
@@ -111,7 +112,7 @@ namespace BrandUp.FileStorage.Folder
         /// <exception cref="NotFoundException"></exception>
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
-        public async Task<FileInfo<TFile>> GetFileInfoAsync(Guid fileId, CancellationToken cancellationToken = default)
+        public async Task<IFileInfo<TFile>> GetFileInfoAsync(Guid fileId, CancellationToken cancellationToken = default)
         {
             var metadataPath = Path.Combine(folderConfiguration.MetadataPath, fileId.ToString() + ".json");
 

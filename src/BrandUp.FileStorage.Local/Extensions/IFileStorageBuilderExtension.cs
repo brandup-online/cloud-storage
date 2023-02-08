@@ -1,6 +1,5 @@
-﻿using BrandUp.FileStorage.Builder;
+﻿using BrandUp.FileStorage.Abstract;
 using BrandUp.FileStorage.Folder.Configuration;
-using Microsoft.Extensions.Configuration;
 
 namespace BrandUp.FileStorage.Folder
 {
@@ -13,14 +12,14 @@ namespace BrandUp.FileStorage.Folder
         /// 
         /// </summary>
         /// <param name="builder"></param>
-        /// <param name="configuration"></param>
+        /// <param name="configureAction"></param>
         /// <returns></returns>
-        public static IFileStorageBuilder AddFolderStorage(this IFileStorageBuilder builder, IConfiguration configuration)
+        public static IFileStorageBuilder AddFolderStorage(this IFileStorageBuilder builder, Action<FolderConfiguration> configureAction)
         {
-            FolderConfiguration config = new();
+            var options = new FolderConfiguration();
+            configureAction(options);
 
-            configuration.Bind(config);
-            builder.AddConfiguration(typeof(LocalFileStorage<>), config);
+            builder.AddStorage(typeof(LocalFileStorage<>), options);
 
             return builder;
         }
@@ -37,7 +36,7 @@ namespace BrandUp.FileStorage.Folder
             var options = new FolderConfiguration();
             configureAction(options);
 
-            builder.AddFileToStorage<TFile>(options);
+            builder.AddFileToStorage<TFile>(typeof(LocalFileStorage<>), options);
 
             return builder;
         }

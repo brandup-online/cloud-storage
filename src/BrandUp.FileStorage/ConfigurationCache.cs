@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using BrandUp.FileStorage.Abstract;
+using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
 namespace BrandUp.FileStorage
@@ -26,8 +27,10 @@ namespace BrandUp.FileStorage
             if (configuration.GetType() != configurationType)
                 throw new ArgumentException("Passed object does not match with the configuration type");
 
-            var constructor = storageType.MakeGenericType(fileType).GetConstructors().Where(c => c.IsPublic
-            && c.GetParameters().Select(p => p.ParameterType).Contains(configurationType)).FirstOrDefault();
+            var constructor = storageType.MakeGenericType(fileType)
+                                        .GetConstructors()
+                                        .Where(c => c.IsPublic && c.GetParameters().Select(p => p.ParameterType).Contains(configurationType))
+                                        .FirstOrDefault();
 
             if (constructor == null)
                 throw new ArgumentException($"Type does not have suitable constructors (constructor must be public and have parameter of type {configurationType.Name})");

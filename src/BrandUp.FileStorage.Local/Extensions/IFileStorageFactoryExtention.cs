@@ -1,4 +1,4 @@
-﻿using BrandUp.FileStorage.Folder.Configuration;
+﻿using BrandUp.FileStorage.Abstract;
 
 namespace BrandUp.FileStorage.Folder
 {
@@ -14,7 +14,7 @@ namespace BrandUp.FileStorage.Folder
         /// <param name="factory"></param>
         /// <returns></returns>
         public static IFileStorage<TFile> CreateFolderStorage<TFile>(this IFileStorageFactory factory) where TFile : class, IFileMetadata, new()
-            => factory.Create<TFile, FolderConfiguration>();
+            => factory.Create<TFile>();
 
     }
 }

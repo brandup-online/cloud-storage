@@ -1,3 +1,4 @@
+using BrandUp.FileStorage.Abstract;
 using BrandUp.FileStorage.Attributes;
 using BrandUp.FileStorage.AwsS3;
 using BrandUp.FileStorage.Tests._fakes;
