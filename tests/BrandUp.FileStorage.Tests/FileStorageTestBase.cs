@@ -27,8 +27,9 @@ namespace BrandUp.FileStorage.Tests
 
             var builder = services.AddFileStorage();
 
-            builder.AddAwsS3Storage(config.GetSection("TestCloudStorage:Default"))
-                    .AddAwsS3Bucket<FakeFile>(o => config.GetSection("TestCloudStorage:FakeFile").Bind(o))
+            builder
+                .AddAwsS3Storage(options => { })
+                    .AddAwsS3Bucket<FakeFile>("FakeFile2")
                     .AddAwsS3Bucket<AttributedFakeFile>(o => config.GetSection("TestCloudStorage:FakeFile").Bind(o))
                     .AddAwsS3Bucket<FakeMetadataOld>(o => config.GetSection("TestCloudStorage:FakeFile").Bind(o))
                     .AddAwsS3Bucket<FakeMetadataNew>(o => config.GetSection("TestCloudStorage:FakeFile").Bind(o));
@@ -41,7 +42,6 @@ namespace BrandUp.FileStorage.Tests
             rootServiceProvider = services.BuildServiceProvider();
             serviceScope = rootServiceProvider.CreateScope();
         }
-
 
         #region IAsyncLifetime region
 

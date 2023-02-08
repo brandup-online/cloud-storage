@@ -14,26 +14,18 @@ namespace BrandUp.FileStorage.Builder
         /// <summary>
         /// Dictionary where key is type of metadata property and value is collection of properties of this type 
         /// </summary>
-        public IDictionary<Type, PropertyCacheCollection> Properties { get; init; }
+        public IDictionary<Type, FileMetadataDefinition> Properties { get; init; }
         IDictionary<Type, ConfigurationCache> IFileStorageBuilder.ConfigurationCache => configurationCache; // Type is config type
 
-        /// <summary>
-        /// Constructor of builder
-        /// </summary>
-        /// <param name="services"> Service collection </param>
-        /// <exception cref="ArgumentNullException"> throws if services is null </exception>
         public FileStorageBuilder(IServiceCollection services)
         {
-            Properties = new Dictionary<Type, PropertyCacheCollection>();
+            Properties = new Dictionary<Type, FileMetadataDefinition>();
             Services = services ?? throw new ArgumentNullException(nameof(services));
 
             configurationCache = new Dictionary<Type, ConfigurationCache>();
 
             Services.AddScoped<IFileStorageFactory, FileStorageFactory>();
-            Services.AddSingleton<IFileStorageBuilder, FileStorageBuilder>(f =>
-            {
-                return this;
-            });
+            Services.AddSingleton<IFileStorageBuilder, FileStorageBuilder>(f => this);
         }
 
         #region IFileStorageBuilder members
@@ -72,19 +64,19 @@ namespace BrandUp.FileStorage.Builder
         /// <exception cref="ArgumentException">Throws if type of configuration not added to builder yet</exception>
         public FileStorageBuilder AddFileToStorage<TFile>(object configuration) where TFile : class, new()
         {
-            var type = typeof(TFile);
+            var fileType = typeof(TFile);
+            if (Properties.ContainsKey(fileType))
+                throw new InvalidOperationException();
+
             var configType = configuration.GetType();
 
             if (configurationCache.TryGetValue(configType, out var cache))
-                cache.Add(type, configuration);
-            else throw new ArgumentException("Unknown configuration. First you need add this configuration to builder");
+                cache.Add(fileType, configuration);
+            else
+                throw new ArgumentException("Unknown configuration. First you need add this configuration to builder");
 
-            var propertyCollection = new PropertyCacheCollection();
-            var properties = type.GetProperties();
-            GeneratePropertyCollection(propertyCollection, properties);
-
-            if (!Properties.TryGetValue(type, out _))
-                Properties.Add(type, propertyCollection);
+            var fileTypeDefinition = new FileMetadataDefinition(fileType);
+            Properties.Add(fileTypeDefinition.MetadataFileType, fileTypeDefinition);
 
             return this;
         }
@@ -93,26 +85,18 @@ namespace BrandUp.FileStorage.Builder
 
         #region Helpers 
 
-        void GeneratePropertyCollection(PropertyCacheCollection collection, PropertyInfo[] properties, string name = default)
+        void GeneratePropertyCollection(PropertyCacheCollection collection, Type type, string parentName = default)
         {
-            foreach (var prop in properties)
+            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.SetProperty);
+            foreach (var property in properties)
             {
-                var key = prop.GetCustomAttribute<MetadataKeyAttribute>()?.MetadataKey ?? prop.Name;
+                var propertyName = property.GetCustomAttribute<MetadataKeyAttribute>()?.Name ?? property.Name;
+                var metadataName = parentName == null ? propertyName : parentName + "." + propertyName;
 
-                if (!prop.PropertyType.IsSerializable)
-                {
-                    if (name == null)
-                        GeneratePropertyCollection(collection, prop.PropertyType.GetProperties(), key);
-                    else
-                        GeneratePropertyCollection(collection, prop.PropertyType.GetProperties(), name + "." + key);
-                }
+                if (!property.PropertyType.IsSerializable)
+                    GeneratePropertyCollection(collection, property.PropertyType, metadataName);
                 else
-                {
-                    if (name != null)
-                        collection.Add(name + "." + key, prop);
-                    else
-                        collection.Add(key, prop);
-                }
+                    collection.AddProperty(metadataName, property);
             }
         }
 

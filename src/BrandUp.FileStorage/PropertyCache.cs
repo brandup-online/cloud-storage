@@ -1,41 +1,60 @@
-﻿using System.Collections;
+﻿using BrandUp.FileStorage.Attributes;
+using System.Collections;
 using System.Reflection;
 
 namespace BrandUp.FileStorage
 {
-    /// <summary>
-    /// Collections of metadata property informations 
-    /// </summary>
-    public class PropertyCacheCollection : IEnumerable<PropertyCache>
+    public class FileMetadataDefinition : IEnumerable<PropertyCache>
     {
-        private readonly IList<PropertyCache> caches = new List<PropertyCache>();
-        /// <summary>
-        /// Adds to collections new cache object
-        /// </summary>
-        /// <param name="fullName">Name of simple type property(if property is nested properties separated by dot)</param>
-        /// <param name="item">Property info object of this property</param>
-        public void Add(string fullName, PropertyInfo item)
+        readonly List<PropertyCache> caches = new();
+        readonly ConstructorInfo constructor;
+        readonly List<PropertyInfo> serviceProperties = new List<PropertyInfo>();
+
+        public Type MetadataFileType { get; }
+
+        public FileMetadataDefinition(Type metadataFileType)
         {
-            caches.Add(new() { FullPropertyName = fullName, Property = item });
+            MetadataFileType = metadataFileType;
+
+            GeneratePropertyCollection(metadataFileType);
         }
 
-        private IEnumerable<PropertyCache> GetValues()
+        #region Helpers 
+
+        void GeneratePropertyCollection(Type type, string parentName = default)
         {
-            foreach (var s in caches)
+            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.SetProperty);
+            foreach (var property in properties)
             {
-                yield return s;
+                var propertyName = property.GetCustomAttribute<MetadataKeyAttribute>()?.Name ?? property.Name;
+                var metadataName = parentName == null ? propertyName : parentName + "." + propertyName;
+
+                if (!property.PropertyType.IsSerializable)
+                    GeneratePropertyCollection(property.PropertyType, metadataName);
+                else
+                    AddProperty(metadataName, property);
             }
+        }
+
+        #endregion
+
+        public PropertyCache AddProperty(string fullName, PropertyInfo item)
+        {
+            var propertyMetadata = new PropertyCache() { FullPropertyName = fullName, Property = item };
+            caches.Add(propertyMetadata);
+            return propertyMetadata;
+        }
+
+        public object CreateStorageInstance(IServiceProvider serviceProvider)
+        {
+            constructor.Invoke()
         }
 
         #region IEnumerable implementation
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
         public IEnumerator<PropertyCache> GetEnumerator()
         {
-            return GetValues().GetEnumerator();
+            return caches.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

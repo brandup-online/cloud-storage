@@ -5,20 +5,17 @@ namespace BrandUp.FileStorage
 {
     internal class ConfigurationCache
     {
-        readonly IDictionary<Type, ConstructorInfo> storageConstructors;
         readonly Type storageType;
-        readonly IDictionary<string, object> configs;
         readonly Type configurationType;
+        readonly Dictionary<Type, ConstructorInfo> storageConstructors = new();
+        readonly IDictionary<string, object> configs;
 
         public ConfigurationCache(Type storageType, Type configurationType, object defaultConfiguration)
         {
             this.storageType = storageType ?? throw new ArgumentNullException(nameof(storageType));
+            this.configurationType = configurationType ?? throw new ArgumentNullException(nameof(configurationType));
 
             configs = new Dictionary<string, object>() { { "Default", defaultConfiguration } };
-
-            storageConstructors = new Dictionary<Type, ConstructorInfo>();
-
-            this.configurationType = configurationType ?? throw new ArgumentNullException(nameof(configurationType));
         }
 
         internal void Add(Type fileType, object configuration)
@@ -52,7 +49,7 @@ namespace BrandUp.FileStorage
                 {
                     if (param.ParameterType == configurationType)
                     {
-                        var config = configurationType.GetConstructor(new Type[] { }).Invoke(new object[] { });
+                        var config = configurationType.GetConstructor(Array.Empty<Type>()).Invoke(Array.Empty<object>());
                         foreach (var prop in configurationType.GetProperties())
                         {
                             if (prop.GetValue(configs[typeof(TFileType).Name]) != null)
