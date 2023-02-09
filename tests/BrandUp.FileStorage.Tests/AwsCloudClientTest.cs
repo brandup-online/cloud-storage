@@ -22,7 +22,7 @@ namespace BrandUp.FileStorage.Tests
         public async Task Success_Basics()
         {
             using var stream = new MemoryStream(Properties.Resources.Image);
-            using var client = factory.CreateAwsStorage<FakeAwsFile>();
+            using var client = factory.Create<FakeAwsFile>();
 
             Assert.NotNull(client);
 
@@ -36,6 +36,7 @@ namespace BrandUp.FileStorage.Tests
                 FakeTimeSpan = TimeSpan.FromSeconds(127)
             }, stream);
         }
+
 
         /// <summary>
         /// Constructs situation if metadata class has been changed.
@@ -96,7 +97,7 @@ namespace BrandUp.FileStorage.Tests
         }
 
         /// <summary>
-        /// Testing <see cref="MetadataKeyAttribute"/> 
+        /// Testing attributes <see cref="MetadataKeyAttribute"/> and <see cref="MetadataIgnoreAttribute"/>
         /// </summary>
         [Fact]
         public async Task Success_Attributes()
@@ -165,37 +166,6 @@ namespace BrandUp.FileStorage.Tests
             Assert.True(await client.DeleteFileAsync(fileId));
 
             #endregion
-        }
-
-        async Task DoCRUD<T>(IFileStorage<T> client, T metadata, Stream stream) where T : class, IFileMetadata, new()
-        {
-            var fileinfo = await client.UploadFileAsync(metadata, stream, CancellationToken.None);
-            Assert.NotNull(fileinfo);
-
-            var getFileinfo = await client.GetFileInfoAsync(fileinfo.FileId, CancellationToken.None);
-            Assert.NotNull(getFileinfo);
-
-            var inputMetadata = metadata as FakeAwsFile;
-            var downloadedMetadata = getFileinfo.Metadata as FakeAwsFile;
-
-            Assert.Equal(inputMetadata.FileName, downloadedMetadata.FileName);
-            Assert.Equal(inputMetadata.Extension, downloadedMetadata.Extension);
-            Assert.Equal(inputMetadata.FakeInt, downloadedMetadata.FakeInt);
-            Assert.Equal(inputMetadata.FakeTimeSpan, downloadedMetadata.FakeTimeSpan);
-            Assert.Equal(inputMetadata.FakeInner.FakeGuid, downloadedMetadata.FakeInner.FakeGuid);
-            Assert.Equal(inputMetadata.FakeInner.FakeBool, downloadedMetadata.FakeInner.FakeBool);
-            Assert.Equal(inputMetadata.FakeDateTime, downloadedMetadata.FakeDateTime);
-
-            Assert.Equal(stream.Length, getFileinfo.Size);
-
-            using var downlodadedStream = await client.ReadFileAsync(fileinfo.FileId, CancellationToken.None);
-            Assert.NotNull(downlodadedStream);
-            Assert.Equal(stream.Length, downlodadedStream.Length);
-
-            var isDeleted = await client.DeleteFileAsync(fileinfo.FileId, CancellationToken.None);
-            Assert.True(isDeleted);
-
-            Assert.Null(await client.GetFileInfoAsync(fileinfo.FileId, CancellationToken.None));
         }
     }
 }

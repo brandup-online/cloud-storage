@@ -1,4 +1,7 @@
-﻿namespace BrandUp.FileStorage.Abstract
+﻿using BrandUp.FileStorage.Abstract.Exceptions;
+
+
+namespace BrandUp.FileStorage.Abstract
 {
     /// <summary>
     /// Interface for work with the storage.

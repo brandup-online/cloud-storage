@@ -11,6 +11,15 @@ namespace BrandUp.FileStorage.Tests._fakes.Aws
         public DateTime FakeDateTime { get; set; }
         public TimeSpan FakeTimeSpan { get; set; }
         public FakeInnnerClass FakeInner { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 
     public class AttributedFakeFile : IFileMetadata

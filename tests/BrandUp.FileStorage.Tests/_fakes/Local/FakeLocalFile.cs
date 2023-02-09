@@ -3,7 +3,6 @@ using BrandUp.FileStorage.Attributes;
 
 namespace BrandUp.FileStorage.Tests._fakes.Local
 {
-
     public class FakeLocalFile : IFileMetadata
     {
         public string FileName { get; set; }
@@ -27,7 +26,8 @@ namespace BrandUp.FileStorage.Tests._fakes.Local
         public TimeSpan FakeSpan { get; set; }
         [MetadataKey("Fake_INNer")]
         public AttributtedInnerClass Inner { get; set; }
-
+        [MetadataIgnore]
+        public int InnerInt { get; set; }
     }
 
     public class FakeInnnerClass

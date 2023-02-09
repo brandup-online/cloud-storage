@@ -1,4 +1,5 @@
-﻿using BrandUp.FileStorage.AwsS3;
+﻿using BrandUp.FileStorage.Abstract;
+using BrandUp.FileStorage.AwsS3;
 using BrandUp.FileStorage.Folder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -58,36 +59,83 @@ namespace BrandUp.FileStorage.Tests
 
         #endregion
 
-        //protected async Task DoCRUD<T>(IFileStorage<T> client, T metadata, Stream stream) where T : class, IFileMetadata, new()
-        //{
-        //    var fileinfo = await client.UploadFileAsync(metadata, stream, CancellationToken.None);
-        //    Assert.NotNull(fileinfo);
+        protected async Task DoCRUD<T>(IFileStorage<T> client, T metadata, Stream stream) where T : class, IFileMetadata, new()
+        {
+            var fileinfo = await client.UploadFileAsync(metadata, stream, CancellationToken.None);
+            Assert.NotNull(fileinfo);
+            Assert.NotEqual(fileinfo.FileId, default);
+            Assert.Equal(fileinfo.Size, stream.Length);
+            Equivalent(metadata, fileinfo.Metadata);
 
-        //    var getFileinfo = await client.GetFileInfoAsync(fileinfo.FileId, CancellationToken.None);
-        //    Assert.NotNull(getFileinfo);
+            var getFileinfo = await client.GetFileInfoAsync(fileinfo.FileId, CancellationToken.None);
+            Assert.NotNull(getFileinfo);
+            Assert.NotEqual(getFileinfo.FileId, default);
+            Assert.Equal(getFileinfo.Size, stream.Length);
+            Equivalent(metadata, getFileinfo.Metadata);
 
-        //    var inputMetadata = metadata as FakeFile;
-        //    var downloadedMetadata = getFileinfo.Metadata as FakeFile;
+            using var downlodadedStream = await client.ReadFileAsync(fileinfo.FileId, CancellationToken.None);
+            Assert.NotNull(downlodadedStream);
+            CompareStreams(stream, downlodadedStream);
 
-        //    Assert.Equal(inputMetadata.FileName, downloadedMetadata.FileName);
-        //    Assert.Equal(inputMetadata.Extension, downloadedMetadata.Extension);
-        //    Assert.Equal(inputMetadata.FakeInt, downloadedMetadata.FakeInt);
-        //    Assert.Equal(inputMetadata.FakeTimeSpan, downloadedMetadata.FakeTimeSpan);
-        //    Assert.Equal(inputMetadata.FakeInner.FakeGuid, downloadedMetadata.FakeInner.FakeGuid);
-        //    Assert.Equal(inputMetadata.FakeInner.FakeBool, downloadedMetadata.FakeInner.FakeBool);
-        //    Assert.Equal(inputMetadata.FakeDateTime, downloadedMetadata.FakeDateTime);
+            var isDeleted = await client.DeleteFileAsync(fileinfo.FileId, CancellationToken.None);
+            Assert.True(isDeleted);
 
-        //    Assert.Equal(stream.Length, getFileinfo.Size);
+            Assert.Null(await client.GetFileInfoAsync(fileinfo.FileId, CancellationToken.None));
+        }
 
-        //    using var downlodadedStream = await client.ReadFileAsync(fileinfo.FileId, CancellationToken.None);
-        //    Assert.NotNull(downlodadedStream);
-        //    Assert.Equal(stream.Length, downlodadedStream.Length);
+        void Equivalent<T>(T expected, T actual)
+        {
+            foreach (var property in typeof(T).GetProperties())
+            {
+                var expectedValue = property.GetValue(expected, null);
+                var actualValue = property.GetValue(actual, null);
 
-        //    var isDeleted = await client.DeleteFileAsync(fileinfo.FileId, CancellationToken.None);
-        //    Assert.True(isDeleted);
+                if (property.PropertyType.IsSerializable)
+                {
+                    Assert.Equal(expectedValue, actualValue);
+                }
+                else
+                {
+                    Equivalent(expectedValue, actualValue);
+                }
+            }
+        }
 
-        //    Assert.Null(await client.GetFileInfoAsync(fileinfo.FileId, CancellationToken.None));
-        //}
+        void CompareStreams(Stream expected, Stream actual)
+        {
+            Stream assertStream = null;
+            using var ms = new MemoryStream();
+            try
+            {
+                actual.Seek(0, SeekOrigin.Begin);
+                assertStream = actual;
+            }
+            catch
+            {
+                actual.CopyTo(ms);
+                assertStream = ms;
+                assertStream.Seek(0, SeekOrigin.Begin);
+            }
+            expected.Seek(0, SeekOrigin.Begin);
+
+            Assert.Equal(expected.Length, actual.Length);
+
+            var bytesToRead = sizeof(long);
+
+            byte[] one = new byte[bytesToRead];
+            byte[] two = new byte[bytesToRead];
+
+            int iterations = (int)Math.Ceiling((double)expected.Length / bytesToRead);
+
+            for (int i = 0; i < iterations; i++)
+            {
+                expected.Read(one, 0, bytesToRead);
+                assertStream.Read(two, 0, bytesToRead);
+
+                Assert.Equal(BitConverter.ToInt64(one, 0), BitConverter.ToInt64(two, 0));
+            }
+
+        }
 
         #region Virtual members
 
