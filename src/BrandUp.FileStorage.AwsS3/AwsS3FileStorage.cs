@@ -2,8 +2,10 @@
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 using BrandUp.FileStorage.Abstract;
+using BrandUp.FileStorage.Abstract.Configuration;
 using BrandUp.FileStorage.AwsS3.Configuration;
 using BrandUp.FileStorage.Exceptions;
+using System.Reflection;
 
 namespace BrandUp.FileStorage.AwsS3
 {
@@ -19,15 +21,22 @@ namespace BrandUp.FileStorage.AwsS3
 
         private bool isDisposed;
 
+        private static PropertyInfo[] configurationProperties = typeof(AwsS3Configuration).GetProperties();
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="options">Amazon S3 configuration</param>
+        /// <param name="fileConfiguration">Amazon S3 configuration</param>
+        /// <param name="storageConfiguration">Amazon S3 configuration</param>
         /// <param name="metadataSerializer">Service for serializing metadata to Amazon S3 metadata</param>
         /// <exception cref="ArgumentNullException"></exception>
-        public AwsS3FileStorage(AwsS3Configuration options, IMetadataSerializer<TMetadata> metadataSerializer)
+        public AwsS3FileStorage(IFileStorageConfiguration storageConfiguration, IFileMetadataConfiguration fileConfiguration, IMetadataSerializer<TMetadata> metadataSerializer)
         {
-            this.options = options ?? throw new ArgumentNullException(nameof(options));
+            if (storageConfiguration == null)
+                throw new ArgumentNullException(nameof(storageConfiguration));
+            //File storage can be null
+
+            options = SetOptions(storageConfiguration, fileConfiguration);
+
             this.metadataSerializer = metadataSerializer ?? throw new ArgumentNullException(nameof(metadataSerializer));
 
             client = new AmazonS3Client(this.options.AccessKeyId, this.options.SecretAccessKey,
@@ -198,6 +207,27 @@ namespace BrandUp.FileStorage.AwsS3
                     _ => throw new IntegrationException(ex)
                 };
             }
+        }
+
+        #endregion
+
+        #region Helpers 
+
+        private AwsS3Configuration SetOptions(IFileStorageConfiguration storageConfiguration, IFileMetadataConfiguration fileConfiguration)
+        {
+            if (storageConfiguration is not AwsS3Configuration defaultConfig)
+                throw new ArgumentException(nameof(storageConfiguration));
+            if (fileConfiguration is not AwsS3Configuration bucketConfig)
+                throw new ArgumentException(nameof(fileConfiguration));
+
+            AwsS3Configuration options = new();
+            foreach (var property in configurationProperties)
+            {
+                var value = property.GetValue(defaultConfig) ?? property.GetValue(bucketConfig);
+                property.SetValue(options, value);
+            }
+
+            return options;
         }
 
         #endregion

@@ -1,7 +1,7 @@
 using BrandUp.FileStorage.Abstract;
 using BrandUp.FileStorage.Attributes;
 using BrandUp.FileStorage.AwsS3;
-using BrandUp.FileStorage.Tests._fakes;
+using BrandUp.FileStorage.Tests._fakes.Aws;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BrandUp.FileStorage.Tests
@@ -22,11 +22,11 @@ namespace BrandUp.FileStorage.Tests
         public async Task Success_Basics()
         {
             using var stream = new MemoryStream(Properties.Resources.Image);
-            using var client = factory.CreateAwsStorage<FakeFile>();
+            using var client = factory.CreateAwsStorage<FakeAwsFile>();
 
             Assert.NotNull(client);
 
-            await DoCRUD(client, new FakeFile
+            await DoCRUD(client, new FakeAwsFile
             {
                 FakeInner = new() { FakeGuid = Guid.NewGuid(), FakeBool = true },
                 FileName = "string",
@@ -104,11 +104,11 @@ namespace BrandUp.FileStorage.Tests
             #region Base to Attributed
 
             using var stream = new MemoryStream(Properties.Resources.Image);
-            using var client = factory.CreateAwsStorage<FakeFile>();
+            using var client = factory.CreateAwsStorage<FakeAwsFile>();
 
             var fileId = Guid.NewGuid();
 
-            var fileInfo = await client.UploadFileAsync(fileId, new FakeFile
+            var fileInfo = await client.UploadFileAsync(fileId, new FakeAwsFile
             {
                 FakeInner = new() { FakeGuid = Guid.NewGuid(), FakeBool = true },
                 FileName = "string",
@@ -165,6 +165,37 @@ namespace BrandUp.FileStorage.Tests
             Assert.True(await client.DeleteFileAsync(fileId));
 
             #endregion
+        }
+
+        async Task DoCRUD<T>(IFileStorage<T> client, T metadata, Stream stream) where T : class, IFileMetadata, new()
+        {
+            var fileinfo = await client.UploadFileAsync(metadata, stream, CancellationToken.None);
+            Assert.NotNull(fileinfo);
+
+            var getFileinfo = await client.GetFileInfoAsync(fileinfo.FileId, CancellationToken.None);
+            Assert.NotNull(getFileinfo);
+
+            var inputMetadata = metadata as FakeAwsFile;
+            var downloadedMetadata = getFileinfo.Metadata as FakeAwsFile;
+
+            Assert.Equal(inputMetadata.FileName, downloadedMetadata.FileName);
+            Assert.Equal(inputMetadata.Extension, downloadedMetadata.Extension);
+            Assert.Equal(inputMetadata.FakeInt, downloadedMetadata.FakeInt);
+            Assert.Equal(inputMetadata.FakeTimeSpan, downloadedMetadata.FakeTimeSpan);
+            Assert.Equal(inputMetadata.FakeInner.FakeGuid, downloadedMetadata.FakeInner.FakeGuid);
+            Assert.Equal(inputMetadata.FakeInner.FakeBool, downloadedMetadata.FakeInner.FakeBool);
+            Assert.Equal(inputMetadata.FakeDateTime, downloadedMetadata.FakeDateTime);
+
+            Assert.Equal(stream.Length, getFileinfo.Size);
+
+            using var downlodadedStream = await client.ReadFileAsync(fileinfo.FileId, CancellationToken.None);
+            Assert.NotNull(downlodadedStream);
+            Assert.Equal(stream.Length, downlodadedStream.Length);
+
+            var isDeleted = await client.DeleteFileAsync(fileinfo.FileId, CancellationToken.None);
+            Assert.True(isDeleted);
+
+            Assert.Null(await client.GetFileInfoAsync(fileinfo.FileId, CancellationToken.None));
         }
     }
 }

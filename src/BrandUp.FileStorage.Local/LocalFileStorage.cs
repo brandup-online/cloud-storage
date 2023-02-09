@@ -1,7 +1,9 @@
 ﻿using BrandUp.FileStorage.Abstract;
+using BrandUp.FileStorage.Abstract.Configuration;
 using BrandUp.FileStorage.Exceptions;
 using BrandUp.FileStorage.Folder.Configuration;
 using Newtonsoft.Json;
+using System.Reflection;
 using System.Text;
 
 namespace BrandUp.FileStorage.Folder
@@ -14,20 +16,45 @@ namespace BrandUp.FileStorage.Folder
     {
         readonly FolderConfiguration folderConfiguration;
 
+        private static PropertyInfo[] configurationProperties = typeof(FolderConfiguration).GetProperties();
+
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="folderConfiguration"></param>
+        /// <param name="storageConfiguration"></param>
+        /// <param name="fileConfiguration"></param>
         /// <exception cref="ArgumentNullException"></exception>
-        public LocalFileStorage(FolderConfiguration folderConfiguration)
+        public LocalFileStorage(IFileStorageConfiguration storageConfiguration, IFileMetadataConfiguration fileConfiguration)
         {
-            this.folderConfiguration = folderConfiguration ?? throw new ArgumentNullException(nameof(folderConfiguration));
+            if (storageConfiguration == null)
+                throw new ArgumentNullException(nameof(storageConfiguration));
+            if (fileConfiguration == null)
+                folderConfiguration = SetOptions(storageConfiguration, new FolderConfiguration());
+            else
+                folderConfiguration = SetOptions(storageConfiguration, fileConfiguration);
 
             if (!Directory.Exists(this.folderConfiguration.ContentPath))
                 Directory.CreateDirectory(this.folderConfiguration.ContentPath);
 
             if (!Directory.Exists(this.folderConfiguration.MetadataPath))
                 Directory.CreateDirectory(this.folderConfiguration.MetadataPath);
+        }
+
+        private FolderConfiguration SetOptions(IFileStorageConfiguration storageConfiguration, IFileMetadataConfiguration fileConfiguration)
+        {
+            if (storageConfiguration is not FolderConfiguration defaultConfig)
+                throw new ArgumentException(nameof(storageConfiguration));
+            if (fileConfiguration is not FolderConfiguration bucketConfig)
+                throw new ArgumentException(nameof(fileConfiguration));
+
+            FolderConfiguration options = new();
+            foreach (var property in configurationProperties)
+            {
+                var value = property.GetValue(defaultConfig) ?? property.GetValue(bucketConfig);
+                property.SetValue(options, value);
+            }
+
+            return options;
         }
 
         #region IFileStorage members

@@ -1,5 +1,7 @@
 ﻿using BrandUp.FileStorage.Abstract;
+using BrandUp.FileStorage.Abstract.Configuration;
 using BrandUp.FileStorage.Attributes;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections;
 using System.Reflection;
 
@@ -10,33 +12,53 @@ namespace BrandUp.FileStorage
         readonly List<PropertyCache> caches = new();
         readonly ConstructorInfo constructor;
 
+        private IFileStorageConfiguration storageConfiguration; // Configuration for storage of file.
+        private IFileMetadataConfiguration fileConfiguration; // Custom configuration for file.
+
         public Type MetadataFileType { get; }
 
-        public FileMetadataDefinition(Type metadataFileType)
+        public FileMetadataDefinition(Type metadataFileType, Type storageType)
         {
             MetadataFileType = metadataFileType;
 
             GeneratePropertyCollection(metadataFileType);
-
+            constructor = GetStorageConstructor(storageType);
         }
 
-        public PropertyCache AddProperty(string fullName, PropertyInfo item)
+        public void AddConfiguration(IFileStorageConfiguration storageConfiguration, IFileMetadataConfiguration fileConfiguration)
         {
-            var propertyMetadata = new PropertyCache() { FullPropertyName = fullName, Property = item };
-            caches.Add(propertyMetadata);
-            return propertyMetadata;
+            this.storageConfiguration = storageConfiguration;
+            this.fileConfiguration = fileConfiguration;
         }
 
         #region IStorageInstanceCreator members
 
         public IFileStorage<T> CreateStorageInstance<T>(IServiceProvider serviceProvider) where T : class, IFileMetadata, new()
         {
-            return (IFileStorage<T>)constructor.Invoke(Type.EmptyTypes);
+            var constructorParameters = new List<object>();
+            foreach (var parameter in constructor.GetParameters())
+            {
+                if (parameter.ParameterType == typeof(IFileStorageConfiguration))
+                {
+                    constructorParameters.Add(storageConfiguration);
+                }
+                else if (parameter.ParameterType == typeof(IFileMetadataConfiguration))
+                {
+                    constructorParameters.Add(fileConfiguration);
+                }
+                else
+                {
+                    var service = serviceProvider.GetRequiredService(parameter.ParameterType);
+                    constructorParameters.Add(service);
+                }
+            }
+
+            return (IFileStorage<T>)constructor.Invoke(constructorParameters.ToArray());
         }
 
         #endregion
 
-        #region IEnumerable implementation
+        #region IEnumerable members
 
         public IEnumerator<IPropertyCache> GetEnumerator()
         {
@@ -71,6 +93,66 @@ namespace BrandUp.FileStorage
             }
         }
 
+
+        void AddProperty(string fullName, PropertyInfo item)
+        {
+            var propertyMetadata = new PropertyCache() { FullPropertyName = fullName, Property = item };
+            caches.Add(propertyMetadata);
+        }
+
+        ConstructorInfo GetStorageConstructor(Type storageType)
+        {
+
+            //.Where(c => c.IsPublic && c.GetParameters().Select(p => p.ParameterType).Contains(configurationType))
+            //.FirstOrDefault();
+            ConstructorInfo storageConstructor = null;
+            foreach (var constructor in storageType.MakeGenericType(MetadataFileType).GetConstructors())
+            {
+                if (constructor.IsPublic)
+                {
+                    var parameters = constructor.GetParameters();
+
+                    // Finding IFileStorageConfiguration parameter. This parameter is required
+                    bool storageConfigFlag = false;
+                    foreach (var parameter in parameters)
+                    {
+                        if (parameter.ParameterType == typeof(IFileStorageConfiguration))
+                        {
+                            storageConfigFlag = true;
+                            break;
+                        }
+                    }
+
+                    // Finding IFileMetadataConfiguration parameter.
+                    // Storage can not suppose configuration for certain file, so this parameter is optional.
+                    if (storageConfigFlag)
+                    {
+                        bool fileConfigFlag = false;
+                        foreach (var parameter in parameters)
+                        {
+                            if (parameter.ParameterType == typeof(IFileMetadataConfiguration))
+                            {
+                                fileConfigFlag = true;
+                                break;
+                            }
+                        }
+
+                        storageConstructor = constructor;
+
+                        //If constructor with both configs was found, finding is break
+                        if (fileConfigFlag)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (storageConstructor == null)
+                throw new ArgumentException($"Type does not have suitable constructors (constructor must be public and have parameter of type {typeof(IFileStorageConfiguration)})");
+
+            return storageConstructor;
+        }
         //void Add(Type fileType, object configuration)
         //{
         //    if (configuration == null)

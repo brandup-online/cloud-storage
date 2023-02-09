@@ -13,7 +13,7 @@ namespace BrandUp.FileStorage
         /// </summary>
         public Guid FileId { get; init; }
         /// <summary>
-        /// Size of filr
+        /// Size of file 
         /// </summary>
         public long Size { get; init; }
         /// <summary>

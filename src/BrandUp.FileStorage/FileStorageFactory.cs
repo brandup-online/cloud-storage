@@ -11,7 +11,7 @@ namespace BrandUp.FileStorage
         readonly IFileDefinitionsDictionary fileDefinitions;
         readonly IServiceProvider provider;
 
-        public FileStorageFactory(IStorageInstanceCreator cache, IFileDefinitionsDictionary fileDefinitions)
+        public FileStorageFactory(IServiceProvider provider, IFileDefinitionsDictionary fileDefinitions)
         {
             this.fileDefinitions = fileDefinitions ?? throw new ArgumentNullException(nameof(fileDefinitions));
             this.provider = provider ?? throw new ArgumentNullException(nameof(provider));
@@ -26,21 +26,25 @@ namespace BrandUp.FileStorage
         /// <returns>instance of IFileStorage</returns>
         public IFileStorage<TFileType> Create<TFileType>() where TFileType : class, IFileMetadata, new()
         {
-            if (!fileDefinitions.TryGetConstructor(typeof(TFileType), out var value))
-
+            var fileType = typeof(TFileType);
+            if (!cachedStorages.TryGetValue(fileType, out var storageInstance))
             {
-                var storage = value.CreateStorageInstance<TFileType>(provider);
-                if (storage is IFileStorage<TFileType> typedStorage)
+                if (fileDefinitions.TryGetConstructor(fileType, out var constructor))
                 {
-                    cachedStorages.Add(typeof(TFileType), typedStorage);
-                    return typedStorage;
+                    var storage = constructor.CreateStorageInstance<TFileType>(provider);
+                    if (storage is IFileStorage<TFileType> typedStorage)
+                    {
+                        cachedStorages.Add(typeof(TFileType), typedStorage);
+                        return typedStorage;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Unknown type of storage.");
+                    }
                 }
-                else
-                {
-                    throw new InvalidOperationException("Unknown Type.");
-                }
+                else throw new InvalidOperationException($"File {fileType.Name} not contains in IFileDefinitionsDictionary.");
             }
-            else return value as IFileStorage<TFileType>;
+            else return storageInstance as IFileStorage<TFileType>;
         }
     }
 }

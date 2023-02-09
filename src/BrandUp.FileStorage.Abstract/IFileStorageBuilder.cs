@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using BrandUp.FileStorage.Abstract.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BrandUp.FileStorage.Abstract
 {
@@ -17,9 +18,17 @@ namespace BrandUp.FileStorage.Abstract
         /// Adds a new cofiguration for client 
         /// </summary>
         /// <param name="storageType">Type of storage for which added configuration</param>
-        /// <param name="configuration">Configuration object</param>
+        /// <param name="configuration">Storage Configuration</param>
         /// <returns>Same instance of builder</returns>
-        IFileStorageBuilder AddStorage(Type storageType, object configuration);
+        IFileStorageBuilder AddStorage(Type storageType, IFileStorageConfiguration configuration);
+
+        /// <summary>
+        /// Adds file type with it key to builder
+        /// </summary>
+        /// <typeparam name="TFile">file type to add</typeparam>
+        /// <param name="configuration">Configuration for this file</param>
+        /// <returns>Same instance of builder</returns>
+        IFileStorageBuilder AddFileToStorage<TFile>(Type storageType, string configurationKey = "") where TFile : class, new();
 
         /// <summary>
         /// Adds file type with it configuration to builder
@@ -27,6 +36,6 @@ namespace BrandUp.FileStorage.Abstract
         /// <typeparam name="TFile">file type to add</typeparam>
         /// <param name="configuration">Configuration for this file</param>
         /// <returns>Same instance of builder</returns>
-        IFileStorageBuilder AddFileToStorage<TFile>(Type storageType, object configuration) where TFile : class, new();
+        IFileStorageBuilder AddFileToStorage<TFile>(Type storageType, IFileMetadataConfiguration configuration) where TFile : class, new();
     }
 }

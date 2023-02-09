@@ -1,9 +1,9 @@
 ﻿using BrandUp.FileStorage.Abstract;
 using BrandUp.FileStorage.Attributes;
 
-namespace BrandUp.FileStorage.Tests._fakes
+namespace BrandUp.FileStorage.Tests._fakes.Aws
 {
-    public class FakeFile : IFileMetadata
+    public class FakeAwsFile : IFileMetadata
     {
         public string FileName { get; set; }
         public string Extension { get; set; }
