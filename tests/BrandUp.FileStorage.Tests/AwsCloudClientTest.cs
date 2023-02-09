@@ -37,7 +37,6 @@ namespace BrandUp.FileStorage.Tests
             }, stream);
         }
 
-
         /// <summary>
         /// Constructs situation if metadata class has been changed.
         /// </summary>
