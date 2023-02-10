@@ -2,7 +2,5 @@
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class MetadataIgnoreAttribute : Attribute
-    {
-
-    }
+    { }
 }

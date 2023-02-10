@@ -1,6 +1,5 @@
 ﻿using BrandUp.FileStorage.Abstract;
 using BrandUp.FileStorage.Abstract.Configuration;
-using BrandUp.FileStorage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -69,7 +68,7 @@ namespace BrandUp.FileStorage.Builder
             if (storageType == null)
                 throw new ArgumentNullException(nameof(storageType));
             if (!storageType.IsAssignableToGenericType(typeof(IFileStorage<>)))
-                throw new ArgumentException($"{nameof(storageType)} must be assignable to {typeof(IFileStorage<>)}");
+                throw new ArgumentException($"{nameof(storageType)} must be assignable to {typeof(IFileStorage<>).Name}");
 
             var fileType = typeof(TFile);
             if (properties.ContainsKey(fileType))
@@ -88,16 +87,13 @@ namespace BrandUp.FileStorage.Builder
             if (configurationKey != string.Empty)
                 fileConfigKey = configurationKey;
 
-            if (storageConfiguration.TryGetValue(fileConfigKey, out var fileConfig))
+            if (!storageConfiguration.TryGetValue(fileConfigKey, out var fileConfig))
             {
-                fileTypeDefinition.AddConfiguration(defaultConfiguration, fileConfig);
-            }
-            else
-            {
-                storageConfiguration.Add(fileConfigKey, fileConfig);
-                fileTypeDefinition.AddConfiguration(defaultConfiguration, configuration);
+                storageConfiguration.Add(fileConfigKey, configuration);
+                fileConfig = configuration;
             }
 
+            fileTypeDefinition.AddConfiguration(defaultConfiguration, fileConfig);
             Services.AddScoped(fileTypeDefinition.CreateStorageInstance<TFile>);
 
             return this;

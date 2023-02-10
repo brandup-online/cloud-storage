@@ -63,4 +63,19 @@ namespace BrandUp.FileStorage.Storages.Aws._fakes
 
         public int SomeInt { get; set; }
     }
+
+    public class FakeRequiredFile : IFileMetadata
+    {
+        [MetadataRequired]
+        public string FileName { get; set; }
+
+        [MetadataRequired]
+        public Guid? SomeGuid { get; set; }
+
+        [MetadataRequired]
+        public DateTime? SomeDateTime { get; set; }
+
+        [MetadataRequired]
+        public int? SomeInt { get; set; }
+    }
 }

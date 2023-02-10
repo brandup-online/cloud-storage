@@ -13,7 +13,8 @@ namespace BrandUp.FileStorage.Storages.Aws
                         .AddAwsS3Bucket<_fakes.FakeFile>("FakeAwsFile")
                         .AddAwsS3Bucket<_fakes.AttributedFakeFile>("FakeAwsFile")
                         .AddAwsS3Bucket<_fakes.FakeMetadataOld>("FakeAwsFile")
-                        .AddAwsS3Bucket<_fakes.FakeMetadataNew>("FakeAwsFile");
+                        .AddAwsS3Bucket<_fakes.FakeMetadataNew>("FakeAwsFile")
+                        .AddAwsS3Bucket<_fakes.FakeRequiredFile>("FakeAwsFile");
             base.OnConfigure(services, builder);
         }
 
@@ -173,6 +174,22 @@ namespace BrandUp.FileStorage.Storages.Aws
             Assert.True(await client.DeleteFileAsync(fileId));
 
             #endregion
+        }
+
+        /// <summary>
+        /// Test MetadataRequiredAttribute
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task Required()
+        {
+            using var stream = new MemoryStream(image);
+            using var client = Services.GetRequiredService<IFileStorage<_fakes.FakeRequiredFile>>();
+
+            var fileId = Guid.NewGuid();
+
+            await Assert.ThrowsAsync<Exception>(async () => await client.UploadFileAsync(fileId, new _fakes.FakeRequiredFile
+            { }, stream));
         }
 
         #endregion

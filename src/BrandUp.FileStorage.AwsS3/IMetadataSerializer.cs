@@ -36,8 +36,16 @@ namespace BrandUp.FileStorage.AwsS3
 
             foreach (var property in metadataProperties)
             {
+                var propValue = GetPropertyValue(fileInfo, property.FullPropertyName);
+
+                var required = property.Property.GetCustomAttribute<MetadataRequiredAttribute>();
+                if (required != null)
+                    if (!required.IsValid(propValue))
+                        throw new Exception($"{property.FullPropertyName} is required.");
+
                 var converter = TypeDescriptor.GetConverter(property.Property.PropertyType);
-                var value = converter.ConvertToString(GetPropertyValue(fileInfo, property.FullPropertyName));
+                var value = converter.ConvertToString(propValue);
+
                 var key = ToTrainCase(property.FullPropertyName.Replace(".", ""));
 
                 if (property.Property.PropertyType == typeof(string))
@@ -70,6 +78,12 @@ namespace BrandUp.FileStorage.AwsS3
                             SetPropertyValue(fileMetadata, property.FullPropertyName, DecodePropertyValue(value));
                         else
                             SetPropertyValue(fileMetadata, property.FullPropertyName, converter.ConvertFrom(value));
+                    }
+                    else
+                    {
+                        var required = property.Property.GetCustomAttribute<MetadataRequiredAttribute>();
+                        if (required != null)
+                            throw new Exception($"{property.FullPropertyName} is required.");
                     }
                 }
             }

@@ -31,5 +31,20 @@ namespace BrandUp.FileStorage.Builder
             Assert.Same(awsStorage1, awsStorage2);
             Assert.Same(localStorage1, localStorage2);
         }
+
+        [Fact]
+        public void DifferentScopes()
+        {
+            using var scope1 = Services.CreateScope();
+            using var awsStorage1 = scope1.ServiceProvider.GetRequiredService<IFileStorage<Storages.Aws._fakes.FakeFile>>();
+            using var localStorage1 = scope1.ServiceProvider.GetRequiredService<IFileStorage<Storages.Local._fakes.FakeFile>>();
+
+            using var scope2 = Services.CreateScope();
+            using var awsStorage2 = scope2.ServiceProvider.GetRequiredService<IFileStorage<Storages.Aws._fakes.FakeFile>>();
+            using var localStorage2 = scope2.ServiceProvider.GetRequiredService<IFileStorage<Storages.Local._fakes.FakeFile>>();
+
+            Assert.NotSame(awsStorage1, awsStorage2);
+            Assert.NotSame(localStorage1, localStorage2);
+        }
     }
 }
