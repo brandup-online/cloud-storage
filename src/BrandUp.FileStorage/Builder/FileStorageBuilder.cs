@@ -1,27 +1,29 @@
 ﻿using BrandUp.FileStorage.Abstract;
 using BrandUp.FileStorage.Abstract.Configuration;
-using BrandUp.FileStorage.Extensions;
+using BrandUp.FileStorage;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace BrandUp.FileStorage.Builder
 {
     /// <summary>
     /// Implementation of IFileStorageBuilder
     /// </summary>
-    public class FileStorageBuilder : IFileStorageBuilder, IFileDefinitionsDictionary
+    public class FileStorageBuilder : IFileStorageBuilder, IFileDefinitionsContext
     {
-        readonly IDictionary<Type, IFileStorageConfiguration> configurations; // Type is IFileStorage Type
-        readonly IDictionary<Type, FileMetadataDefinition> properties;// Type is IFileMetadata File
+        readonly IDictionary<Type, IDictionary<string, IStorageConfiguration>> configurations; // Type is IFileStorage type
+        readonly IDictionary<Type, FileMetadataDefinition> properties;// Type is IFileMetadata type
+
+        const string dafaultConfigurationKey = "Default";
 
         public FileStorageBuilder(IServiceCollection services)
         {
             properties = new Dictionary<Type, FileMetadataDefinition>();
-            configurations = new Dictionary<Type, IFileStorageConfiguration>();
+            configurations = new Dictionary<Type, IDictionary<string, IStorageConfiguration>>();
 
             Services = services ?? throw new ArgumentNullException(nameof(services));
 
-            Services.AddScoped<IFileStorageFactory, FileStorageFactory>();
-            Services.AddSingleton<IFileDefinitionsDictionary>(f => this);
+            Services.AddSingleton<IFileDefinitionsContext>(f => this);
         }
 
         #region IFileStorageBuilder members
@@ -38,7 +40,7 @@ namespace BrandUp.FileStorage.Builder
         /// <param name="configuration">Configuration object</param>
         /// <returns>Same instance of builder</returns>
         /// <exception cref="ArgumentException"></exception>
-        public IFileStorageBuilder AddStorage(Type storageType, IFileStorageConfiguration configuration)
+        public IFileStorageBuilder AddStorage(Type storageType, IDictionary<string, IStorageConfiguration> configuration)
         {
             if (storageType == null)
                 throw new ArgumentNullException(nameof(storageType));
@@ -54,21 +56,20 @@ namespace BrandUp.FileStorage.Builder
         }
 
         /// <summary>
-        /// Adds file type with it key to builder
+        /// Adds file type with it configuration to builder
         /// </summary>
         /// <typeparam name="TFile">file type to add</typeparam>
         /// <param name="storageType">Type of storage for file</param>
-        /// <param name="configurationKey">Configuration for this file</param>
+        /// <param name="configuration">Configuration for file</param>
+        /// <param name="configurationKey"></param>
         /// <returns>Same instance of builder</returns>
         /// <exception cref="ArgumentException">Throws if type of configuration not added to builder yet</exception>
-        public IFileStorageBuilder AddFileToStorage<TFile>(Type storageType, string configurationKey) where TFile : class, new()
+        public IFileStorageBuilder AddFileToStorage<TFile>(Type storageType, IStorageConfiguration configuration, string configurationKey = "") where TFile : class, IFileMetadata, new()
         {
             if (storageType == null)
                 throw new ArgumentNullException(nameof(storageType));
             if (!storageType.IsAssignableToGenericType(typeof(IFileStorage<>)))
                 throw new ArgumentException($"{nameof(storageType)} must be assignable to {typeof(IFileStorage<>)}");
-            if (configurationKey == null)
-                throw new ArgumentNullException(nameof(configurationKey));
 
             var fileType = typeof(TFile);
             if (properties.ContainsKey(fileType))
@@ -77,50 +78,27 @@ namespace BrandUp.FileStorage.Builder
             if (!configurations.TryGetValue(storageType, out var storageConfiguration))
                 throw new Exception($"Builder does not contain configuration for {storageType.Name}");
 
+            if (!storageConfiguration.TryGetValue(dafaultConfigurationKey, out var defaultConfiguration))
+                throw new Exception($"Builder does not contain default configuration for {storageType.Name}");
+
             var fileTypeDefinition = new FileMetadataDefinition(fileType, storageType);
             properties.Add(fileTypeDefinition.MetadataFileType, fileTypeDefinition);
 
-            var defaultConfigKey = fileType.Name; // By default file name is key for file configuration
+            var fileConfigKey = fileType.Name; // By default file name is key for file configuration
             if (configurationKey != string.Empty)
-                defaultConfigKey = configurationKey;
+                fileConfigKey = configurationKey;
 
-            if (storageConfiguration.InnerConfiguration.TryGetValue(defaultConfigKey, out var fileConfig))
+            if (storageConfiguration.TryGetValue(fileConfigKey, out var fileConfig))
             {
-                fileTypeDefinition.AddConfiguration(storageConfiguration, fileConfig);
+                fileTypeDefinition.AddConfiguration(defaultConfiguration, fileConfig);
             }
             else
-                fileTypeDefinition.AddConfiguration(storageConfiguration, null);
-            return this;
-        }
+            {
+                storageConfiguration.Add(fileConfigKey, fileConfig);
+                fileTypeDefinition.AddConfiguration(defaultConfiguration, configuration);
+            }
 
-        /// <summary>
-        /// Adds file type with it configuration to builder
-        /// </summary>
-        /// <typeparam name="TFile">file type to add</typeparam>
-        /// <param name="storageType">Type of storage for file</param>
-        /// <param name="configuration">Configuration for file</param>
-        /// <returns>Same instance of builder</returns>
-        /// <exception cref="ArgumentException">Throws if type of configuration not added to builder yet</exception>
-        public IFileStorageBuilder AddFileToStorage<TFile>(Type storageType, IFileMetadataConfiguration configuration) where TFile : class, new()
-        {
-            if (storageType == null)
-                throw new ArgumentNullException(nameof(storageType));
-            if (!storageType.IsAssignableToGenericType(typeof(IFileStorage<>)))
-                throw new ArgumentException($"{nameof(storageType)} must be assignable to {typeof(IFileStorage<>)}");
-            if (configuration == null)
-                throw new ArgumentNullException(nameof(configuration));
-
-            var fileType = typeof(TFile);
-            if (properties.ContainsKey(fileType))
-                throw new InvalidOperationException();
-
-            var fileTypeDefinition = new FileMetadataDefinition(fileType, storageType);
-            properties.Add(fileTypeDefinition.MetadataFileType, fileTypeDefinition);
-
-            if (!configurations.TryGetValue(storageType, out var storageConfiguration))
-                throw new Exception($"Builder does not contain configuration for {storageType.Name}");
-
-            fileTypeDefinition.AddConfiguration(storageConfiguration, configuration);
+            Services.AddScoped(fileTypeDefinition.CreateStorageInstance<TFile>);
 
             return this;
         }
@@ -128,19 +106,6 @@ namespace BrandUp.FileStorage.Builder
         #endregion
 
         #region IFileDefinitionsDictionary members
-
-        public bool TryGetConstructor(Type type, out IStorageInstanceCreator value)
-        {
-            if (properties.TryGetValue(type, out var property))
-                if (property is FileMetadataDefinition metadataDefinition)
-                {
-                    value = metadataDefinition;
-                    return true;
-                }
-
-            value = null;
-            return false;
-        }
 
         public bool TryGetProperties(Type type, out IEnumerable<IPropertyCache> value)
         {
@@ -157,6 +122,4 @@ namespace BrandUp.FileStorage.Builder
 
         #endregion
     }
-
-
 }

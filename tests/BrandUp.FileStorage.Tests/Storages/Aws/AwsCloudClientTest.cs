@@ -1,19 +1,23 @@
 using BrandUp.FileStorage.Abstract;
-using BrandUp.FileStorage.Attributes;
 using BrandUp.FileStorage.AwsS3;
-using BrandUp.FileStorage.Tests._fakes.Aws;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BrandUp.FileStorage.Tests
+namespace BrandUp.FileStorage.Storages.Aws
 {
     public class AwsCloudClientTest : FileStorageTestBase
     {
-        readonly IFileStorageFactory factory;
-
-        public AwsCloudClientTest()
+        readonly byte[] image = Tests.Properties.Resources.Image;
+        protected override void OnConfigure(IServiceCollection services, IFileStorageBuilder builder)
         {
-            factory = Services.GetRequiredService<IFileStorageFactory>();
+            builder.AddAwsS3Storage(Configuration.GetSection("TestCloudStorage"))
+                        .AddAwsS3Bucket<_fakes.FakeFile>("FakeAwsFile")
+                        .AddAwsS3Bucket<_fakes.AttributedFakeFile>("FakeAwsFile")
+                        .AddAwsS3Bucket<_fakes.FakeMetadataOld>("FakeAwsFile")
+                        .AddAwsS3Bucket<_fakes.FakeMetadataNew>("FakeAwsFile");
+            base.OnConfigure(services, builder);
         }
+
+        #region Basic tests
 
         /// <summary>
         /// Basic functionality test
@@ -21,12 +25,12 @@ namespace BrandUp.FileStorage.Tests
         [Fact]
         public async Task Success_Basics()
         {
-            using var stream = new MemoryStream(Properties.Resources.Image);
-            using var client = factory.Create<FakeAwsFile>();
+            using var stream = new MemoryStream(image);
+            using var client = Services.GetRequiredService<IFileStorage<_fakes.FakeFile>>();
 
             Assert.NotNull(client);
 
-            await DoCRUD(client, new FakeAwsFile
+            await DoCRUD(client, new _fakes.FakeFile
             {
                 FakeInner = new() { FakeGuid = Guid.NewGuid(), FakeBool = true },
                 FileName = "string",
@@ -37,6 +41,10 @@ namespace BrandUp.FileStorage.Tests
             }, stream);
         }
 
+        #endregion
+
+        #region Attributes tests
+
         /// <summary>
         /// Constructs situation if metadata class has been changed.
         /// </summary>
@@ -45,8 +53,8 @@ namespace BrandUp.FileStorage.Tests
         {
             #region Old to New 
 
-            using var stream = new MemoryStream(Properties.Resources.Image);
-            using var clientOld = factory.CreateAwsStorage<FakeMetadataOld>();
+            using var stream = new MemoryStream(image);
+            using var clientOld = Services.GetRequiredService<IFileStorage<_fakes.FakeMetadataOld>>();
 
             var fileId = Guid.NewGuid();
 
@@ -57,7 +65,7 @@ namespace BrandUp.FileStorage.Tests
                 SomeGuid = Guid.NewGuid(),
             }, stream);
 
-            using var clientNew = factory.CreateAwsStorage<FakeMetadataNew>();
+            using var clientNew = Services.GetRequiredService<IFileStorage<_fakes.FakeMetadataNew>>();
 
             var newFileInfo = await clientNew.GetFileInfoAsync(fileId);
 
@@ -72,7 +80,7 @@ namespace BrandUp.FileStorage.Tests
 
             #region New to Old
 
-            using var stream2 = new MemoryStream(Properties.Resources.Image);
+            using var stream2 = new MemoryStream(image);
 
             fileId = Guid.NewGuid();
 
@@ -103,12 +111,12 @@ namespace BrandUp.FileStorage.Tests
         {
             #region Base to Attributed
 
-            using var stream = new MemoryStream(Properties.Resources.Image);
-            using var client = factory.CreateAwsStorage<FakeAwsFile>();
+            using var stream = new MemoryStream(image);
+            using var client = Services.GetRequiredService<IFileStorage<_fakes.FakeFile>>();
 
             var fileId = Guid.NewGuid();
 
-            var fileInfo = await client.UploadFileAsync(fileId, new FakeAwsFile
+            var fileInfo = await client.UploadFileAsync(fileId, new _fakes.FakeFile
             {
                 FakeInner = new() { FakeGuid = Guid.NewGuid(), FakeBool = true },
                 FileName = "string",
@@ -118,7 +126,7 @@ namespace BrandUp.FileStorage.Tests
                 FakeTimeSpan = TimeSpan.FromSeconds(127)
             }, stream);
 
-            using var clientAttributed = factory.CreateAwsStorage<AttributedFakeFile>();
+            using var clientAttributed = Services.GetRequiredService<IFileStorage<_fakes.AttributedFakeFile>>();
 
             var attributedFileInfo = await clientAttributed.GetFileInfoAsync(fileId);
 
@@ -136,7 +144,7 @@ namespace BrandUp.FileStorage.Tests
 
             #region Attributed to Base
 
-            using var stream2 = new MemoryStream(Properties.Resources.Image);
+            using var stream2 = new MemoryStream(image);
 
             fileId = Guid.NewGuid();
 
@@ -166,5 +174,7 @@ namespace BrandUp.FileStorage.Tests
 
             #endregion
         }
+
+        #endregion
     }
 }

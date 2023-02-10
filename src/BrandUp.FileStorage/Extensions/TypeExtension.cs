@@ -1,4 +1,4 @@
-﻿namespace BrandUp.FileStorage.Extensions
+﻿namespace BrandUp.FileStorage
 {
     internal static class TypeExtension
     {

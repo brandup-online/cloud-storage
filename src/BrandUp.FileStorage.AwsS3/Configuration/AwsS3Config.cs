@@ -5,7 +5,7 @@ namespace BrandUp.FileStorage.AwsS3.Configuration
     /// <summary>
     /// Class for store configuration about Amazon S3 cloud storage
     /// </summary>
-    public class AwsS3Configuration : IFileStorageConfiguration, IFileMetadataConfiguration
+    public class AwsS3Configuration : IStorageConfiguration
     {
         /// <summary>
         /// Url of service
@@ -27,10 +27,5 @@ namespace BrandUp.FileStorage.AwsS3.Configuration
         /// Name of the bucket 
         /// </summary>
         public string BucketName { get; set; }
-
-        internal IDictionary<string, AwsS3Configuration> InnerConfiguration { get; set; }
-
-        IDictionary<string, IFileMetadataConfiguration> IFileStorageConfiguration.InnerConfiguration
-            => InnerConfiguration.ToDictionary(k => k.Key, v => (IFileMetadataConfiguration)v.Value);
     }
 }

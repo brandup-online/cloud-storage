@@ -5,7 +5,7 @@ namespace BrandUp.FileStorage.Folder.Configuration
     /// <summary>
     /// Configuration for Folder storage
     /// </summary>
-    public class FolderConfiguration : IFileStorageConfiguration, IFileMetadataConfiguration
+    public class FolderConfiguration : IStorageConfiguration
     {
 
         /// <summary>
@@ -16,10 +16,5 @@ namespace BrandUp.FileStorage.Folder.Configuration
         /// Path to folder with matadata
         /// </summary>
         public string MetadataPath { get; set; }
-
-        internal IDictionary<string, FolderConfiguration> InnerConfiguration { get; set; }
-
-        IDictionary<string, IFileMetadataConfiguration> IFileStorageConfiguration.InnerConfiguration
-            => InnerConfiguration.ToDictionary(k => k.Key, v => (IFileMetadataConfiguration)v.Value);
     }
 }

@@ -17,7 +17,7 @@ namespace BrandUp.FileStorage.AwsS3
         const string MetadataPrefix = "X-Amz-Meta";
         readonly IEnumerable<IPropertyCache> metadataProperties;
 
-        public MetadataSerializer(IFileDefinitionsDictionary fileDefinitions)
+        public MetadataSerializer(IFileDefinitionsContext fileDefinitions)
         {
             if (fileDefinitions == null)
                 throw new ArgumentNullException(nameof(fileDefinitions));
@@ -61,13 +61,16 @@ namespace BrandUp.FileStorage.AwsS3
                 var converter = TypeDescriptor.GetConverter(property.Property.PropertyType);
 
                 var metadataKey = MetadataPrefix + "-" + string.Join("-", ToTrainCase(property.FullPropertyName.Replace(".", "")));
-                var value = response.Metadata[metadataKey];
-                if (value != null)
+                if (response.Metadata.Keys.Contains(metadataKey))
                 {
-                    if (property.Property.PropertyType == typeof(string))
-                        SetPropertyValue(fileMetadata, property.FullPropertyName, DecodePropertyValue(value));
-                    else
-                        SetPropertyValue(fileMetadata, property.FullPropertyName, converter.ConvertFrom(value));
+                    var value = response.Metadata[metadataKey];
+                    if (value != null)
+                    {
+                        if (property.Property.PropertyType == typeof(string))
+                            SetPropertyValue(fileMetadata, property.FullPropertyName, DecodePropertyValue(value));
+                        else
+                            SetPropertyValue(fileMetadata, property.FullPropertyName, converter.ConvertFrom(value));
+                    }
                 }
             }
 

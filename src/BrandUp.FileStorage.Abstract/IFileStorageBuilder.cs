@@ -20,7 +20,7 @@ namespace BrandUp.FileStorage.Abstract
         /// <param name="storageType">Type of storage for which added configuration</param>
         /// <param name="configuration">Storage Configuration</param>
         /// <returns>Same instance of builder</returns>
-        IFileStorageBuilder AddStorage(Type storageType, IFileStorageConfiguration configuration);
+        IFileStorageBuilder AddStorage(Type storageType, IDictionary<string, IStorageConfiguration> configuration);
 
         /// <summary>
         /// Adds file type with it key to builder
@@ -28,14 +28,6 @@ namespace BrandUp.FileStorage.Abstract
         /// <typeparam name="TFile">file type to add</typeparam>
         /// <param name="configuration">Configuration for this file</param>
         /// <returns>Same instance of builder</returns>
-        IFileStorageBuilder AddFileToStorage<TFile>(Type storageType, string configurationKey = "") where TFile : class, new();
-
-        /// <summary>
-        /// Adds file type with it configuration to builder
-        /// </summary>
-        /// <typeparam name="TFile">file type to add</typeparam>
-        /// <param name="configuration">Configuration for this file</param>
-        /// <returns>Same instance of builder</returns>
-        IFileStorageBuilder AddFileToStorage<TFile>(Type storageType, IFileMetadataConfiguration configuration) where TFile : class, new();
+        IFileStorageBuilder AddFileToStorage<TFile>(Type storageType, IStorageConfiguration configuration, string configurationKey = "") where TFile : class, IFileMetadata, new();
     }
 }

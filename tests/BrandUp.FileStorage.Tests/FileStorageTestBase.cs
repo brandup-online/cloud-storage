@@ -1,42 +1,33 @@
 ﻿using BrandUp.FileStorage.Abstract;
-using BrandUp.FileStorage.AwsS3;
-using BrandUp.FileStorage.Folder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BrandUp.FileStorage.Tests
+namespace BrandUp.FileStorage
 {
     public abstract class FileStorageTestBase : IAsyncLifetime
     {
         readonly ServiceProvider rootServiceProvider;
         readonly IServiceScope serviceScope;
+        readonly IConfiguration config;
 
         public IServiceProvider RootServices => rootServiceProvider;
         public IServiceProvider Services => serviceScope.ServiceProvider;
+        public IConfiguration Configuration => config;
 
         public FileStorageTestBase()
         {
             var services = new ServiceCollection();
             services.AddLogging();
 
-            var config = new ConfigurationBuilder()
-               .AddUserSecrets(typeof(FileStorageTestBase).Assembly)
-               .AddJsonFile("appsettings.test.json", true)
-               .AddEnvironmentVariables()
-               .Build();
+            config = new ConfigurationBuilder()
+              .AddUserSecrets(typeof(FileStorageTestBase).Assembly)
+              .AddJsonFile("appsettings.test.json", true)
+              .AddEnvironmentVariables()
+              .Build();
 
             var builder = services.AddFileStorage();
 
-            builder.AddAwsS3Storage(config.GetSection("TestCloudStorage"))
-                    .AddAwsS3Bucket<_fakes.Aws.FakeAwsFile>()
-                    .AddAwsS3Bucket<_fakes.Aws.AttributedFakeFile>("FakeAwsFile")
-                    .AddAwsS3Bucket<_fakes.Aws.FakeMetadataOld>("FakeAwsFile")
-                    .AddAwsS3Bucket<_fakes.Aws.FakeMetadataNew>("FakeAwsFile");
-
-            builder.AddFolderStorage(config.GetSection("TestFolderStorage"))
-                  .AddFolderFor<_fakes.Local.FakeLocalFile>();
-
-            OnConfigure(services);
+            OnConfigure(services, builder);
 
             rootServiceProvider = services.BuildServiceProvider();
             serviceScope = rootServiceProvider.CreateScope();
@@ -59,7 +50,20 @@ namespace BrandUp.FileStorage.Tests
 
         #endregion
 
+        #region Test helpers
+
         protected async Task DoCRUD<T>(IFileStorage<T> client, T metadata, Stream stream) where T : class, IFileMetadata, new()
+        {
+            var fileinfo = await TestUploadAsync(client, metadata, stream);
+
+            var getFileinfo = await TestGetAsync(client, metadata, fileinfo.FileId, stream);
+
+            await TestReadAsync(client, fileinfo.FileId, stream);
+
+            await TestDeleteAsync(client, fileinfo.FileId);
+        }
+
+        protected async Task<IFileInfo<T>> TestUploadAsync<T>(IFileStorage<T> client, T metadata, Stream stream) where T : class, IFileMetadata, new()
         {
             var fileinfo = await client.UploadFileAsync(metadata, stream, CancellationToken.None);
             Assert.NotNull(fileinfo);
@@ -67,21 +71,38 @@ namespace BrandUp.FileStorage.Tests
             Assert.Equal(fileinfo.Size, stream.Length);
             Equivalent(metadata, fileinfo.Metadata);
 
-            var getFileinfo = await client.GetFileInfoAsync(fileinfo.FileId, CancellationToken.None);
+            return fileinfo;
+        }
+
+        protected async Task<IFileInfo<T>> TestGetAsync<T>(IFileStorage<T> client, T metadata, Guid id, Stream stream) where T : class, IFileMetadata, new()
+        {
+            var getFileinfo = await client.GetFileInfoAsync(id, CancellationToken.None);
             Assert.NotNull(getFileinfo);
             Assert.NotEqual(getFileinfo.FileId, default);
             Assert.Equal(getFileinfo.Size, stream.Length);
             Equivalent(metadata, getFileinfo.Metadata);
 
-            using var downlodadedStream = await client.ReadFileAsync(fileinfo.FileId, CancellationToken.None);
+            return getFileinfo;
+        }
+
+        protected async Task TestReadAsync<T>(IFileStorage<T> client, Guid id, Stream stream) where T : class, IFileMetadata, new()
+        {
+            using var downlodadedStream = await client.ReadFileAsync(id, CancellationToken.None);
             Assert.NotNull(downlodadedStream);
             CompareStreams(stream, downlodadedStream);
+        }
 
-            var isDeleted = await client.DeleteFileAsync(fileinfo.FileId, CancellationToken.None);
+        protected async Task TestDeleteAsync<T>(IFileStorage<T> client, Guid id) where T : class, IFileMetadata, new()
+        {
+            var isDeleted = await client.DeleteFileAsync(id, CancellationToken.None);
             Assert.True(isDeleted);
 
-            Assert.Null(await client.GetFileInfoAsync(fileinfo.FileId, CancellationToken.None));
+            Assert.Null(await client.GetFileInfoAsync(id, CancellationToken.None));
         }
+
+        #endregion
+
+        #region Utils helpers
 
         void Equivalent<T>(T expected, T actual)
         {
@@ -136,10 +157,11 @@ namespace BrandUp.FileStorage.Tests
             }
 
         }
+        #endregion
 
         #region Virtual members
 
-        protected virtual void OnConfigure(IServiceCollection services) { }
+        protected virtual void OnConfigure(IServiceCollection services, IFileStorageBuilder builder) { }
         protected virtual Task OnInitializeAsync(IServiceProvider rootServices, IServiceProvider scopeServices) => Task.CompletedTask;
         protected virtual Task OnFinishAsync(IServiceProvider rootServices, IServiceProvider scopeServices) => Task.CompletedTask;
 

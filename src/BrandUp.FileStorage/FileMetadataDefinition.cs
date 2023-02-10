@@ -12,8 +12,8 @@ namespace BrandUp.FileStorage
         readonly List<PropertyCache> caches = new();
         readonly ConstructorInfo constructor;
 
-        private IFileStorageConfiguration storageConfiguration; // Configuration for storage of file.
-        private IFileMetadataConfiguration fileConfiguration; // Custom configuration for file.
+        private IStorageConfiguration defaultConfiguration; // Configuration for storage of file.
+        private IStorageConfiguration fileConfiguration; // Custom configuration for file.
 
         public Type MetadataFileType { get; }
 
@@ -25,9 +25,9 @@ namespace BrandUp.FileStorage
             constructor = GetStorageConstructor(storageType);
         }
 
-        public void AddConfiguration(IFileStorageConfiguration storageConfiguration, IFileMetadataConfiguration fileConfiguration)
+        public void AddConfiguration(IStorageConfiguration storageConfiguration, IStorageConfiguration fileConfiguration)
         {
-            this.storageConfiguration = storageConfiguration;
+            this.defaultConfiguration = storageConfiguration;
             this.fileConfiguration = fileConfiguration;
         }
 
@@ -38,13 +38,10 @@ namespace BrandUp.FileStorage
             var constructorParameters = new List<object>();
             foreach (var parameter in constructor.GetParameters())
             {
-                if (parameter.ParameterType == typeof(IFileStorageConfiguration))
+                if (parameter.ParameterType.IsAssignableTo(typeof(IStorageConfiguration)))
                 {
-                    constructorParameters.Add(storageConfiguration);
-                }
-                else if (parameter.ParameterType == typeof(IFileMetadataConfiguration))
-                {
-                    constructorParameters.Add(fileConfiguration);
+                    var joinedConfiguration = JoinConfiguration(parameter.ParameterType, defaultConfiguration, fileConfiguration);
+                    constructorParameters.Add(joinedConfiguration);
                 }
                 else
                 {
@@ -54,6 +51,47 @@ namespace BrandUp.FileStorage
             }
 
             return (IFileStorage<T>)constructor.Invoke(constructorParameters.ToArray());
+        }
+
+        private IStorageConfiguration JoinConfiguration(Type configType, IStorageConfiguration defaultConfiguration, IStorageConfiguration fileConfiguration)
+        {
+            if (configType == null)
+                throw new ArgumentNullException(nameof(configType));
+            if (defaultConfiguration == null)
+                throw new ArgumentNullException(nameof(defaultConfiguration));
+            if (fileConfiguration == null)
+                return defaultConfiguration;
+
+            var defaultConfigType = defaultConfiguration.GetType();
+            var fileConfigType = fileConfiguration?.GetType();
+
+            if (defaultConfigType != configType && !defaultConfigType.IsAssignableTo(configType))
+                throw new ArgumentException();
+
+            if (fileConfigType != configType && !fileConfigType.IsAssignableTo(configType))
+                throw new ArgumentException();
+
+            // Implied that file configuration can be heir of default configuration.
+            if (fileConfigType.IsAbstract)
+                throw new ArgumentException();
+            var constructor = fileConfigType.GetConstructor(Type.EmptyTypes);
+            var newInstance = constructor.Invoke(Type.EmptyTypes);
+
+            foreach (var property in fileConfigType.GetProperties())
+            {
+                var value = property.GetValue(fileConfiguration, null);
+                if (value == null)
+                {
+                    var defaultValue = defaultConfigType.GetProperty(property.Name).GetValue(defaultConfiguration, null);
+                    property.SetValue(newInstance, defaultValue);
+                }
+                else
+                {
+                    property.SetValue(newInstance, value);
+                }
+            }
+            return (IStorageConfiguration)newInstance;
+
         }
 
         #endregion
@@ -93,7 +131,6 @@ namespace BrandUp.FileStorage
             }
         }
 
-
         void AddProperty(string fullName, PropertyInfo item)
         {
             var propertyMetadata = new PropertyCache() { FullPropertyName = fullName, Property = item };
@@ -102,77 +139,21 @@ namespace BrandUp.FileStorage
 
         ConstructorInfo GetStorageConstructor(Type storageType)
         {
-
-            //.Where(c => c.IsPublic && c.GetParameters().Select(p => p.ParameterType).Contains(configurationType))
-            //.FirstOrDefault();
-            ConstructorInfo storageConstructor = null;
             foreach (var constructor in storageType.MakeGenericType(MetadataFileType).GetConstructors())
             {
                 if (constructor.IsPublic)
                 {
                     var parameters = constructor.GetParameters();
 
-                    // Finding IFileStorageConfiguration parameter. This parameter is required
-                    bool storageConfigFlag = false;
-                    foreach (var parameter in parameters)
+                    foreach (var param in parameters)
                     {
-                        if (parameter.ParameterType == typeof(IFileStorageConfiguration))
-                        {
-                            storageConfigFlag = true;
-                            break;
-                        }
-                    }
-
-                    // Finding IFileMetadataConfiguration parameter.
-                    // Storage can not suppose configuration for certain file, so this parameter is optional.
-                    if (storageConfigFlag)
-                    {
-                        bool fileConfigFlag = false;
-                        foreach (var parameter in parameters)
-                        {
-                            if (parameter.ParameterType == typeof(IFileMetadataConfiguration))
-                            {
-                                fileConfigFlag = true;
-                                break;
-                            }
-                        }
-
-                        storageConstructor = constructor;
-
-                        //If constructor with both configs was found, finding is break
-                        if (fileConfigFlag)
-                        {
-                            break;
-                        }
+                        if (param.ParameterType.IsAssignableTo(typeof(IStorageConfiguration)))
+                            return constructor;
                     }
                 }
             }
-
-            if (storageConstructor == null)
-                throw new ArgumentException($"Type does not have suitable constructors (constructor must be public and have parameter of type {typeof(IFileStorageConfiguration)})");
-
-            return storageConstructor;
+            throw new ArgumentException($"Type does not have suitable constructors (constructor must be public and have parameter of type {typeof(IStorageConfiguration)})");
         }
-        //void Add(Type fileType, object configuration)
-        //{
-        //    if (configuration == null)
-        //        throw new ArgumentNullException(nameof(configuration));
-
-        //    if (configuration.GetType() != configurationType)
-        //        throw new ArgumentException("Passed object does not match with the configuration type");
-
-        //    var constructor = storageType.MakeGenericType(fileType).GetConstructors().Where(c => c.IsPublic
-        //    && c.GetParameters().Select(p => p.ParameterType).Contains(configurationType)).FirstOrDefault();
-
-        //    if (constructor == null)
-        //        throw new ArgumentException($"Type does not have suitable constructors (constructor must be public and have parameter of type {configurationType.Name})");
-
-        //    if (!storageConstructors.TryAdd(fileType, constructor))
-        //        throw new ArgumentException($"Constructor for {fileType.Name} already exist");
-
-        //    if (!configs.TryAdd(fileType.Name, configuration))
-        //        throw new ArgumentException($"Configuration for {fileType.Name} already exist");
-        //}
 
         #endregion
     }

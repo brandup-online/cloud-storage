@@ -1,9 +1,9 @@
 ﻿using BrandUp.FileStorage.Abstract;
 using BrandUp.FileStorage.Attributes;
 
-namespace BrandUp.FileStorage.Tests._fakes.Local
+namespace BrandUp.FileStorage.Storages.Aws._fakes
 {
-    public class FakeLocalFile : IFileMetadata
+    public class FakeFile : IFileMetadata
     {
         public string FileName { get; set; }
         public string Extension { get; set; }
@@ -11,6 +11,12 @@ namespace BrandUp.FileStorage.Tests._fakes.Local
         public DateTime FakeDateTime { get; set; }
         public TimeSpan FakeTimeSpan { get; set; }
         public FakeInnnerClass FakeInner { get; set; }
+    }
+
+    public class FakeInnnerClass
+    {
+        public bool FakeBool { get; set; }
+        public Guid FakeGuid { get; set; }
     }
 
     public class AttributedFakeFile : IFileMetadata
@@ -28,12 +34,6 @@ namespace BrandUp.FileStorage.Tests._fakes.Local
         public AttributtedInnerClass Inner { get; set; }
         [MetadataIgnore]
         public int InnerInt { get; set; }
-    }
-
-    public class FakeInnnerClass
-    {
-        public bool FakeBool { get; set; }
-        public Guid FakeGuid { get; set; }
     }
 
     public class AttributtedInnerClass
