@@ -4,15 +4,19 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BrandUp.FileStorage
 {
-    public abstract class FileStorageTestBase : IAsyncLifetime
+    public abstract class FileStorageTestBase<T> : IAsyncLifetime where T : class, IFileMetadata, new()
     {
         readonly ServiceProvider rootServiceProvider;
         readonly IServiceScope serviceScope;
         readonly IConfiguration config;
+        readonly IFileStorage<T> fileStorage;
+
+        readonly byte[] image = Tests.Properties.Resources.Image;
 
         public IServiceProvider RootServices => rootServiceProvider;
         public IServiceProvider Services => serviceScope.ServiceProvider;
         public IConfiguration Configuration => config;
+        public IFileStorage<T> Client => fileStorage;
 
         public FileStorageTestBase()
         {
@@ -20,7 +24,7 @@ namespace BrandUp.FileStorage
             services.AddLogging();
 
             config = new ConfigurationBuilder()
-              .AddUserSecrets(typeof(FileStorageTestBase).Assembly)
+              .AddUserSecrets(typeof(FileStorageTestBase<>).Assembly)
               .AddJsonFile("appsettings.test.json", true)
               .AddEnvironmentVariables()
               .Build();
@@ -31,39 +35,63 @@ namespace BrandUp.FileStorage
 
             rootServiceProvider = services.BuildServiceProvider();
             serviceScope = rootServiceProvider.CreateScope();
+
+            fileStorage = serviceScope.ServiceProvider.GetService<IFileStorage<T>>();
         }
 
-        #region IAsyncLifetime region
+        #region Asserts
 
-        public async Task InitializeAsync()
+        /// <summary>
+        /// Scope returns only one instance of storage 
+        /// </summary>
+        [Fact]
+        public void Succses_SameInstanses()
         {
-            await OnInitializeAsync(rootServiceProvider, serviceScope.ServiceProvider);
+            using var storage1 = Services.GetRequiredService<IFileStorage<T>>();
+            using var storage2 = Services.GetRequiredService<IFileStorage<T>>();
+
+            Assert.Same(storage1, storage2);
         }
 
-        public async Task DisposeAsync()
+        [Fact]
+        public void Succses_SDifferentScopes()
         {
-            await OnFinishAsync(rootServiceProvider, serviceScope.ServiceProvider);
+            using var scope1 = Services.CreateScope();
+            using var storage1 = scope1.ServiceProvider.GetRequiredService<IFileStorage<T>>();
 
-            serviceScope.Dispose();
-            await rootServiceProvider.DisposeAsync();
+            using var scope2 = Services.CreateScope();
+            using var storage2 = scope2.ServiceProvider.GetRequiredService<IFileStorage<T>>();
+
+            Assert.NotSame(storage1, storage2);
+        }
+
+        [Fact]
+        public async Task Success_CRUD()
+        {
+            using var stream = new MemoryStream(image);
+            var metadata = CreateMetadataValue();
+
+            await DoCRUD(metadata, stream);
         }
 
         #endregion
 
         #region Test helpers
 
-        protected async Task DoCRUD<T>(IFileStorage<T> client, T metadata, Stream stream) where T : class, IFileMetadata, new()
+        protected abstract T CreateMetadataValue();
+
+        protected async Task DoCRUD(T metadata, Stream stream)
         {
-            var fileinfo = await TestUploadAsync(client, metadata, stream);
+            var fileinfo = await TestUploadAsync(Client, metadata, stream);
 
-            var getFileinfo = await TestGetAsync(client, metadata, fileinfo.FileId, stream);
+            var getFileinfo = await TestGetAsync(Client, metadata, fileinfo.FileId, stream);
 
-            await TestReadAsync(client, fileinfo.FileId, stream);
+            await TestReadAsync(Client, fileinfo.FileId, stream);
 
-            await TestDeleteAsync(client, fileinfo.FileId);
+            await TestDeleteAsync(Client, fileinfo.FileId);
         }
 
-        protected async Task<IFileInfo<T>> TestUploadAsync<T>(IFileStorage<T> client, T metadata, Stream stream) where T : class, IFileMetadata, new()
+        protected async Task<IFileInfo<T>> TestUploadAsync(IFileStorage<T> client, T metadata, Stream stream)
         {
             var fileinfo = await client.UploadFileAsync(metadata, stream, CancellationToken.None);
             Assert.NotNull(fileinfo);
@@ -74,7 +102,7 @@ namespace BrandUp.FileStorage
             return fileinfo;
         }
 
-        protected async Task<IFileInfo<T>> TestGetAsync<T>(IFileStorage<T> client, T metadata, Guid id, Stream stream) where T : class, IFileMetadata, new()
+        protected async Task<IFileInfo<T>> TestGetAsync(IFileStorage<T> client, T metadata, Guid id, Stream stream)
         {
             var getFileinfo = await client.GetFileInfoAsync(id, CancellationToken.None);
             Assert.NotNull(getFileinfo);
@@ -85,14 +113,14 @@ namespace BrandUp.FileStorage
             return getFileinfo;
         }
 
-        protected async Task TestReadAsync<T>(IFileStorage<T> client, Guid id, Stream stream) where T : class, IFileMetadata, new()
+        protected async Task TestReadAsync(IFileStorage<T> client, Guid id, Stream stream)
         {
             using var downlodadedStream = await client.ReadFileAsync(id, CancellationToken.None);
             Assert.NotNull(downlodadedStream);
             CompareStreams(stream, downlodadedStream);
         }
 
-        protected async Task TestDeleteAsync<T>(IFileStorage<T> client, Guid id) where T : class, IFileMetadata, new()
+        protected async Task TestDeleteAsync(IFileStorage<T> client, Guid id)
         {
             var isDeleted = await client.DeleteFileAsync(id, CancellationToken.None);
             Assert.True(isDeleted);
@@ -104,12 +132,12 @@ namespace BrandUp.FileStorage
 
         #region Utils helpers
 
-        void Equivalent<T>(T expected, T actual)
+        void Equivalent(T expected, T actual)
         {
             foreach (var property in typeof(T).GetProperties())
             {
-                var expectedValue = property.GetValue(expected, null);
-                var actualValue = property.GetValue(actual, null);
+                var expectedValue = (T)property.GetValue(expected, null);
+                var actualValue = (T)property.GetValue(actual, null);
 
                 if (property.PropertyType.IsSerializable)
                 {
@@ -164,6 +192,24 @@ namespace BrandUp.FileStorage
         protected virtual void OnConfigure(IServiceCollection services, IFileStorageBuilder builder) { }
         protected virtual Task OnInitializeAsync(IServiceProvider rootServices, IServiceProvider scopeServices) => Task.CompletedTask;
         protected virtual Task OnFinishAsync(IServiceProvider rootServices, IServiceProvider scopeServices) => Task.CompletedTask;
+
+        #endregion
+
+        #region IAsyncLifetime region
+
+        public async Task InitializeAsync()
+        {
+            await OnInitializeAsync(rootServiceProvider, serviceScope.ServiceProvider);
+        }
+
+        public async Task DisposeAsync()
+        {
+            await OnFinishAsync(rootServiceProvider, serviceScope.ServiceProvider);
+
+            serviceScope.Dispose();
+            await rootServiceProvider.DisposeAsync();
+            Client.Dispose();
+        }
 
         #endregion
     }
