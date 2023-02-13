@@ -1,17 +1,17 @@
 ﻿using BrandUp.FileStorage.Abstract;
 using BrandUp.FileStorage.Exceptions;
-using BrandUp.FileStorage.Folder.Configuration;
-using BrandUp.FileStorage.Folder.Serialization;
+using BrandUp.FileStorage.FileSystem.Configuration;
+using BrandUp.FileStorage.FileSystem.Serialization;
 using Newtonsoft.Json;
 using System.Text;
 
-namespace BrandUp.FileStorage.Folder
+namespace BrandUp.FileStorage.FileSystem
 {
     /// <summary>
     /// Storage for local file system
     /// </summary>
     /// <typeparam name="TFile"></typeparam>
-    public class LocalFileStorage<TFile> : IFileStorage<TFile> where TFile : class, IFileMetadata, new()
+    public class FileSystemStorage<TFile> : IFileStorage<TFile> where TFile : class, IFileMetadata, new()
     {
         readonly FolderConfiguration folderConfiguration;
         readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = MetadataContractResolver.Instance };
@@ -21,7 +21,7 @@ namespace BrandUp.FileStorage.Folder
         /// </summary>
         /// <param name="folderConfiguration"></param>
         /// <exception cref="ArgumentNullException"></exception>
-        public LocalFileStorage(FolderConfiguration folderConfiguration)
+        public FileSystemStorage(FolderConfiguration folderConfiguration)
         {
             this.folderConfiguration = folderConfiguration ?? throw new ArgumentNullException(nameof(folderConfiguration));
 
@@ -126,6 +126,10 @@ namespace BrandUp.FileStorage.Folder
                     using var reader = new StreamReader(metadata);
                     var json = await reader.ReadToEndAsync();
                     var data = JsonConvert.DeserializeObject<TFile>(json, jsonSettings);
+                    if (data == null)
+                    {
+                        throw new NullReferenceException(nameof(data));
+                    }
                     var ext = Path.GetExtension(data.FileName);
 
                     var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString() + "." + ext);

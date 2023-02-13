@@ -1,6 +1,7 @@
 ﻿using Amazon.S3.Model;
 using BrandUp.FileStorage.Abstract;
 using BrandUp.FileStorage.Attributes;
+using BrandUp.FileStorage.Exceptions;
 using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -41,7 +42,7 @@ namespace BrandUp.FileStorage.AwsS3
                 var required = property.Property.GetCustomAttribute<MetadataRequiredAttribute>();
                 if (required != null)
                     if (!required.IsValid(propValue))
-                        throw new Exception($"{property.FullPropertyName} is required.");
+                        throw new RequiredMetadataException(property.FullPropertyName);
 
                 var converter = TypeDescriptor.GetConverter(property.Property.PropertyType);
                 var value = converter.ConvertToString(propValue);

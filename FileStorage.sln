@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.AwsS3", "src\BrandUp.FileStorage.AwsS3\BrandUp.FileStorage.AwsS3.csproj", "{8EFCF8A7-DF2D-4EAC-B0CB-5ED85DFE0875}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.Folder", "src\BrandUp.FileStorage.Local\BrandUp.FileStorage.Folder.csproj", "{34FDDF46-868B-4C88-BA20-554C29E9F36E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.FileSystem", "src\BrandUp.FileStorage.Local\BrandUp.FileStorage.FileSystem.csproj", "{34FDDF46-868B-4C88-BA20-554C29E9F36E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.Tests", "tests\BrandUp.FileStorage.Tests\BrandUp.FileStorage.Tests.csproj", "{E32E9578-9B45-4F2A-80EE-8554DECABAF6}"
 EndProject
@@ -20,7 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrandUp.FileStorage.Abstract", "src\BrandUp.FileStorage.Abstract\BrandUp.FileStorage.Abstract.csproj", "{C29786BB-E8AE-4F6C-A021-90792EDB1B16}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.Abstract", "src\BrandUp.FileStorage.Abstract\BrandUp.FileStorage.Abstract.csproj", "{C29786BB-E8AE-4F6C-A021-90792EDB1B16}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

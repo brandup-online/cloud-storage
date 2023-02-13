@@ -6,12 +6,14 @@ namespace BrandUp.FileStorage
 {
     public abstract class FileStorageTestBase<T> : IAsyncLifetime where T : class, IFileMetadata, new()
     {
+        public static Guid TestGuid;
+
         readonly ServiceProvider rootServiceProvider;
         readonly IServiceScope serviceScope;
         readonly IConfiguration config;
         readonly IFileStorage<T> fileStorage;
 
-        readonly byte[] image = Tests.Properties.Resources.Image;
+        readonly protected byte[] image = Tests.Properties.Resources.Image;
 
         public IServiceProvider RootServices => rootServiceProvider;
         public IServiceProvider Services => serviceScope.ServiceProvider;
@@ -36,64 +38,34 @@ namespace BrandUp.FileStorage
             rootServiceProvider = services.BuildServiceProvider();
             serviceScope = rootServiceProvider.CreateScope();
 
-            fileStorage = serviceScope.ServiceProvider.GetService<IFileStorage<T>>();
+            fileStorage = serviceScope.ServiceProvider.GetRequiredService<IFileStorage<T>>();
         }
 
-        #region Asserts
-
-        /// <summary>
-        /// Scope returns only one instance of storage 
-        /// </summary>
-        [Fact]
-        public void Succses_SameInstanses()
+        static FileStorageTestBase()
         {
-            using var storage1 = Services.GetRequiredService<IFileStorage<T>>();
-            using var storage2 = Services.GetRequiredService<IFileStorage<T>>();
-
-            Assert.Same(storage1, storage2);
+            TestGuid = Guid.Parse("ea3dd067-8bd8-4792-bfb0-e7be02d912e1");
         }
-
-        [Fact]
-        public void Succses_SDifferentScopes()
-        {
-            using var scope1 = Services.CreateScope();
-            using var storage1 = scope1.ServiceProvider.GetRequiredService<IFileStorage<T>>();
-
-            using var scope2 = Services.CreateScope();
-            using var storage2 = scope2.ServiceProvider.GetRequiredService<IFileStorage<T>>();
-
-            Assert.NotSame(storage1, storage2);
-        }
-
-        [Fact]
-        public async Task Success_CRUD()
-        {
-            using var stream = new MemoryStream(image);
-            var metadata = CreateMetadataValue();
-
-            await DoCRUD(metadata, stream);
-        }
-
-        #endregion
 
         #region Test helpers
 
-        protected abstract T CreateMetadataValue();
+        internal abstract T CreateMetadataValue();
 
         protected async Task DoCRUD(T metadata, Stream stream)
         {
-            var fileinfo = await TestUploadAsync(Client, metadata, stream);
+            var fileinfo = await TestUploadAsync(metadata, stream);
 
-            var getFileinfo = await TestGetAsync(Client, metadata, fileinfo.FileId, stream);
+            var getFileinfo = await TestGetAsync(fileinfo.FileId);
 
-            await TestReadAsync(Client, fileinfo.FileId, stream);
+            Equivalent(fileinfo.Metadata, getFileinfo.Metadata);
 
-            await TestDeleteAsync(Client, fileinfo.FileId);
+            await TestReadAsync(fileinfo.FileId, stream);
+
+            await TestDeleteAsync(fileinfo.FileId);
         }
 
-        protected async Task<IFileInfo<T>> TestUploadAsync(IFileStorage<T> client, T metadata, Stream stream)
+        internal async Task<IFileInfo<T>> TestUploadAsync(T metadata, Stream stream)
         {
-            var fileinfo = await client.UploadFileAsync(metadata, stream, CancellationToken.None);
+            var fileinfo = await Client.UploadFileAsync(metadata, stream, CancellationToken.None);
             Assert.NotNull(fileinfo);
             Assert.NotEqual(fileinfo.FileId, default);
             Assert.Equal(fileinfo.Size, stream.Length);
@@ -102,42 +74,41 @@ namespace BrandUp.FileStorage
             return fileinfo;
         }
 
-        protected async Task<IFileInfo<T>> TestGetAsync(IFileStorage<T> client, T metadata, Guid id, Stream stream)
+        internal async Task<IFileInfo<T>> TestGetAsync(Guid id)
         {
-            var getFileinfo = await client.GetFileInfoAsync(id, CancellationToken.None);
+            var getFileinfo = await Client.GetFileInfoAsync(id, CancellationToken.None);
             Assert.NotNull(getFileinfo);
-            Assert.NotEqual(getFileinfo.FileId, default);
-            Assert.Equal(getFileinfo.Size, stream.Length);
-            Equivalent(metadata, getFileinfo.Metadata);
+            Assert.Equal(getFileinfo.FileId, id);
+            Assert.True(getFileinfo.Size > 0);
 
             return getFileinfo;
         }
 
-        protected async Task TestReadAsync(IFileStorage<T> client, Guid id, Stream stream)
+        internal async Task TestReadAsync(Guid id, Stream stream)
         {
-            using var downlodadedStream = await client.ReadFileAsync(id, CancellationToken.None);
+            using var downlodadedStream = await Client.ReadFileAsync(id, CancellationToken.None);
             Assert.NotNull(downlodadedStream);
             CompareStreams(stream, downlodadedStream);
         }
 
-        protected async Task TestDeleteAsync(IFileStorage<T> client, Guid id)
+        internal async Task TestDeleteAsync(Guid id)
         {
-            var isDeleted = await client.DeleteFileAsync(id, CancellationToken.None);
+            var isDeleted = await Client.DeleteFileAsync(id, CancellationToken.None);
             Assert.True(isDeleted);
 
-            Assert.Null(await client.GetFileInfoAsync(id, CancellationToken.None));
+            Assert.Null(await Client.GetFileInfoAsync(id, CancellationToken.None));
         }
 
         #endregion
 
         #region Utils helpers
 
-        void Equivalent(T expected, T actual)
+        void Equivalent(object expected, object actual)
         {
-            foreach (var property in typeof(T).GetProperties())
+            foreach (var property in expected.GetType().GetProperties())
             {
-                var expectedValue = (T)property.GetValue(expected, null);
-                var actualValue = (T)property.GetValue(actual, null);
+                var expectedValue = property.GetValue(expected, null);
+                var actualValue = property.GetValue(actual, null);
 
                 if (property.PropertyType.IsSerializable)
                 {

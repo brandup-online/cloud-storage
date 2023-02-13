@@ -1,8 +1,9 @@
 using BrandUp.FileStorage.Abstract;
-using BrandUp.FileStorage.Folder;
+using BrandUp.FileStorage.FileSystem;
+using BrandUp.FileStorage.Tests;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BrandUp.FileStorage.Storages.Local
+namespace BrandUp.FileStorage.Storages.FileSystem
 {
     public class FakeFile : IFileMetadata
     {
@@ -20,7 +21,7 @@ namespace BrandUp.FileStorage.Storages.Local
         public Guid FakeGuid { get; set; }
     }
 
-    public class FolderStorageTest : FileStorageTestBase<FakeFile>
+    public class FileSystemStorageTest : FileStorageTest<FakeFile>
     {
         protected override void OnConfigure(IServiceCollection services, IFileStorageBuilder builder)
         {
@@ -32,11 +33,11 @@ namespace BrandUp.FileStorage.Storages.Local
             base.OnConfigure(services, builder);
         }
 
-        protected override FakeFile CreateMetadataValue()
+        internal override FakeFile CreateMetadataValue()
         {
             return new FakeFile
             {
-                FakeInner = new() { FakeGuid = Guid.NewGuid(), FakeBool = true },
+                FakeInner = new() { FakeGuid = TestGuid, FakeBool = true },
                 FileName = "string",
                 Extension = "png",
                 FakeDateTime = new DateTime(2002, 12, 15, 13, 45, 0),

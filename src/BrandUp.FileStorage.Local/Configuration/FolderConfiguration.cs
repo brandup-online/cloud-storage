@@ -1,9 +1,9 @@
 ﻿using BrandUp.FileStorage.Abstract.Configuration;
 
-namespace BrandUp.FileStorage.Folder.Configuration
+namespace BrandUp.FileStorage.FileSystem.Configuration
 {
     /// <summary>
-    /// Configuration for Folder storage
+    /// Configuration for FileSystem storage
     /// </summary>
     public class FolderConfiguration : IStorageConfiguration
     {

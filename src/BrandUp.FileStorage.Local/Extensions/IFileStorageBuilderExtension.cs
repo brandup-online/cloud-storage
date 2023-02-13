@@ -1,9 +1,9 @@
 ﻿using BrandUp.FileStorage.Abstract;
 using BrandUp.FileStorage.Abstract.Configuration;
-using BrandUp.FileStorage.Folder.Configuration;
+using BrandUp.FileStorage.FileSystem.Configuration;
 using Microsoft.Extensions.Configuration;
 
-namespace BrandUp.FileStorage.Folder
+namespace BrandUp.FileStorage.FileSystem
 {
     /// <summary>
     /// 
@@ -20,7 +20,7 @@ namespace BrandUp.FileStorage.Folder
         {
             FolderConfiguration options = new();
             defaultConfiguration(options);
-            builder.AddStorage(typeof(LocalFileStorage<>), new Dictionary<string, IStorageConfiguration> { { "Default", options } });
+            builder.AddStorage(typeof(FileSystemStorage<>), new Dictionary<string, IStorageConfiguration> { { "Default", options } });
 
             return builder;
         }
@@ -33,17 +33,7 @@ namespace BrandUp.FileStorage.Folder
         /// <returns></returns>
         public static IFileStorageBuilder AddFolderStorage(this IFileStorageBuilder builder, IConfiguration configuration)
         {
-            Dictionary<string, IStorageConfiguration> options = new();
-
-            foreach (var config in configuration.GetChildren())
-            {
-                FolderConfiguration inner = new();
-                config.Bind(inner);
-                if (!options.TryAdd(config.Key, inner))
-                    throw new Exception("Configuration keys mest be unique.");
-            }
-
-            builder.AddStorage(typeof(LocalFileStorage<>), options);
+            builder.AddStorageWithConfiguration(typeof(FileSystemStorage<>), typeof(FolderConfiguration), configuration);
 
             return builder;
         }
@@ -56,7 +46,7 @@ namespace BrandUp.FileStorage.Folder
         /// <returns></returns>
         public static IFileStorageBuilder AddFolderFor<TFile>(this IFileStorageBuilder builder) where TFile : class, IFileMetadata, new()
         {
-            builder.AddFileToStorage<TFile>(typeof(LocalFileStorage<>), null);
+            builder.AddFileToStorage<TFile>(typeof(FileSystemStorage<>), null);
 
             return builder;
         }
@@ -70,7 +60,7 @@ namespace BrandUp.FileStorage.Folder
         /// <returns></returns>
         public static IFileStorageBuilder AddFolderFor<TFile>(this IFileStorageBuilder builder, string key) where TFile : class, IFileMetadata, new()
         {
-            builder.AddFileToStorage<TFile>(typeof(LocalFileStorage<>), null, key);
+            builder.AddFileToStorage<TFile>(typeof(FileSystemStorage<>), null, key);
 
             return builder;
         }
@@ -88,7 +78,7 @@ namespace BrandUp.FileStorage.Folder
             FolderConfiguration options = new();
             configurationAction(options);
 
-            builder.AddFileToStorage<TFile>(typeof(LocalFileStorage<>), options, key);
+            builder.AddFileToStorage<TFile>(typeof(FileSystemStorage<>), options, key);
 
             return builder;
         }

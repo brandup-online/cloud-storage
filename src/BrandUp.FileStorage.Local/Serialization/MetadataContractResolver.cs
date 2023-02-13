@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BrandUp.FileStorage.Folder.Serialization
+namespace BrandUp.FileStorage.FileSystem.Serialization
 {
     internal class MetadataContractResolver : DefaultContractResolver
     {

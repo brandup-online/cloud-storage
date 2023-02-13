@@ -11,13 +11,13 @@ namespace BrandUp.FileStorage.Builder
     public class FileStorageBuilder : IFileStorageBuilder, IFileDefinitionsContext
     {
         readonly IDictionary<Type, IDictionary<string, IStorageConfiguration>> configurations; // Type is IFileStorage type
-        readonly IDictionary<Type, FileMetadataDefinition> properties;// Type is IFileMetadata type
+        readonly IDictionary<Type, FileMetadataDefinition> typeDefinitions;// Type is IFileMetadata type
 
         const string dafaultConfigurationKey = "Default";
 
         public FileStorageBuilder(IServiceCollection services)
         {
-            properties = new Dictionary<Type, FileMetadataDefinition>();
+            typeDefinitions = new Dictionary<Type, FileMetadataDefinition>();
             configurations = new Dictionary<Type, IDictionary<string, IStorageConfiguration>>();
 
             Services = services ?? throw new ArgumentNullException(nameof(services));
@@ -71,7 +71,7 @@ namespace BrandUp.FileStorage.Builder
                 throw new ArgumentException($"{nameof(storageType)} must be assignable to {typeof(IFileStorage<>).Name}");
 
             var fileType = typeof(TFile);
-            if (properties.ContainsKey(fileType))
+            if (typeDefinitions.ContainsKey(fileType))
                 throw new InvalidOperationException($"File {fileType.Name} for {storageType.Name} already exist");
 
             if (!configurations.TryGetValue(storageType, out var storageConfiguration))
@@ -81,7 +81,7 @@ namespace BrandUp.FileStorage.Builder
                 throw new Exception($"Builder does not contain default configuration for {storageType.Name}");
 
             var fileTypeDefinition = new FileMetadataDefinition(fileType, storageType);
-            properties.Add(fileTypeDefinition.MetadataFileType, fileTypeDefinition);
+            typeDefinitions.Add(fileTypeDefinition.MetadataFileType, fileTypeDefinition);
 
             var fileConfigKey = fileType.Name; // By default file name is key for file configuration
             if (configurationKey != string.Empty)
@@ -105,7 +105,7 @@ namespace BrandUp.FileStorage.Builder
 
         public bool TryGetProperties(Type type, out IEnumerable<IPropertyCache> value)
         {
-            if (properties.TryGetValue(type, out var property))
+            if (typeDefinitions.TryGetValue(type, out var property))
                 if (property is IEnumerable<IPropertyCache> metadataDefinition)
                 {
                     value = metadataDefinition;

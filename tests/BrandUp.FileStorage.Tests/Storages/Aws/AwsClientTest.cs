@@ -1,6 +1,4 @@
 ﻿using BrandUp.FileStorage.Abstract;
-using BrandUp.FileStorage.AwsS3;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace BrandUp.FileStorage.Tests.Storages.Aws
 {
@@ -19,32 +17,21 @@ namespace BrandUp.FileStorage.Tests.Storages.Aws
         }
     }
 
-    public class AwsClientTest : FileStorageTestBase<FakeFile>
+    public class AwsClientTest : AwsClientTestBase<FakeFile>
     {
         #region FileStorageTestBase
 
-        protected override FakeFile CreateMetadataValue()
+        internal override FakeFile CreateMetadataValue()
         {
             return new FakeFile
             {
-                FakeInner = new() { FakeGuid = Guid.NewGuid(), FakeBool = true },
+                FakeInner = new() { FakeGuid = TestGuid, FakeBool = true },
                 FileName = "string",
                 Extension = "png",
                 FakeDateTime = new DateTime(2002, 12, 15, 13, 45, 0),
                 FakeInt = 21332,
                 FakeTimeSpan = TimeSpan.FromSeconds(127)
             };
-        }
-
-        protected override void OnConfigure(IServiceCollection services, IFileStorageBuilder builder)
-        {
-            builder.AddAwsS3Storage(Configuration.GetSection("TestCloudStorage"))
-                        .AddAwsS3Bucket<FakeFile>("FakeAwsFile");
-            //.AddAwsS3Bucket<_fakes.AttributedFakeFile>("FakeAwsFile")
-            //.AddAwsS3Bucket<_fakes.FakeMetadataOld>("FakeAwsFile")
-            //.AddAwsS3Bucket<_fakes.FakeMetadataNew>("FakeAwsFile")
-            //.AddAwsS3Bucket<_fakes.FakeRequiredFile>("FakeAwsFile");
-            base.OnConfigure(services, builder);
         }
 
         #endregion
