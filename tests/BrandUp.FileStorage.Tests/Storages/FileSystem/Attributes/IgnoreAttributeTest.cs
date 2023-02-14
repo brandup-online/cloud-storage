@@ -25,14 +25,14 @@ namespace BrandUp.FileStorage.Tests.Storages.FileSystem.Attributes
 
             //Gets IgnoreFakeFile metadata as NoIgnoreFakeFile metadata and NoIgnoreFakeFile metadata as IgnoreAttributeTest metadata
             //Because for AwsStorage they represents equivalent metadata keys it's working.
-            var fakeFileToAttributedFakeFile = await TestGetAsync(metadata.FileId);
-            var attributedFakeFileToFakeFile = await noIgnoreAttributeClient.TestGetAsync(attributedMetadata.FileId);
+            var fakeFileToAttributedFakeFile = await TestGetAsync(metadata.Id);
+            var attributedFakeFileToFakeFile = await noIgnoreAttributeClient.TestGetAsync(attributedMetadata.Id);
 
             Assert.Equal(metadata.Metadata.FileName, attributedMetadata.Metadata.FileName);
             Assert.Equal(metadata.Metadata.Data, attributedMetadata.Metadata.Data);
 
-            await TestDeleteAsync(metadata.FileId);
-            await noIgnoreAttributeClient.TestDeleteAsync(attributedMetadata.FileId);
+            await TestDeleteAsync(metadata.Id);
+            await noIgnoreAttributeClient.TestDeleteAsync(attributedMetadata.Id);
         }
     }
 

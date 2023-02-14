@@ -1,11 +1,9 @@
-﻿using Amazon.S3.Model;
-using BrandUp.FileStorage.Abstract;
-using BrandUp.FileStorage.Attributes;
-using BrandUp.FileStorage.Exceptions;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
+using BrandUp.FileStorage.Attributes;
+using BrandUp.FileStorage.Exceptions;
 
 namespace BrandUp.FileStorage.AwsS3
 {
@@ -13,7 +11,7 @@ namespace BrandUp.FileStorage.AwsS3
     /// Serializer to AWS metadata properties.
     /// </summary>
     /// <typeparam name="TMetadata">Metadata type of file.</typeparam>
-    public class MetadataSerializer<TMetadata> : IMetadataSerializer<TMetadata> where TMetadata : class, IFileMetadata, new()
+    public class MetadataSerializer<TMetadata> : IMetadataSerializer<TMetadata> where TMetadata : class, new()
     {
         const string MetadataPrefix = "X-Amz-Meta";
         readonly IEnumerable<IPropertyCache> metadataProperties;
@@ -158,7 +156,7 @@ namespace BrandUp.FileStorage.AwsS3
                 var properties = type.GetProperties();
                 foreach (var property in properties)
                 {
-                    var attr = property.GetCustomAttribute<MetadataKeyAttribute>();
+                    var attr = property.GetCustomAttribute<MetadataPropertyAttribute>();
 
                     if (attr == null)
                         continue;

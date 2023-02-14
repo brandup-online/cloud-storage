@@ -1,4 +1,5 @@
 using BrandUp.FileStorage.Abstract;
+using BrandUp.FileStorage.Builder;
 using BrandUp.FileStorage.FileSystem;
 using BrandUp.FileStorage.Tests;
 using Microsoft.Extensions.DependencyInjection;

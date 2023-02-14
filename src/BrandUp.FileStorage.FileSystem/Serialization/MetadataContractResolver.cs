@@ -19,7 +19,7 @@ namespace BrandUp.FileStorage.FileSystem.Serialization
         {
             var property = base.CreateProperty(member, memberSerialization);
 
-            var keyAttribute = member.GetCustomAttribute<MetadataKeyAttribute>();
+            var keyAttribute = member.GetCustomAttribute<MetadataPropertyAttribute>();
 
             if (keyAttribute != null)
             {

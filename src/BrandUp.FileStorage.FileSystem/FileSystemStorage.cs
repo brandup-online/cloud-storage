@@ -11,7 +11,7 @@ namespace BrandUp.FileStorage.FileSystem
     /// Storage for local file system
     /// </summary>
     /// <typeparam name="TFile"></typeparam>
-    public class FileSystemStorage<TFile> : IFileStorage<TFile> where TFile : class, IFileMetadata, new()
+    public class FileSystemStorage<TFile> : IFileCollection<TFile> where TFile : class, IFileMetadata, new()
     {
         readonly FolderConfiguration folderConfiguration;
         readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = MetadataContractResolver.Instance };
@@ -46,7 +46,7 @@ namespace BrandUp.FileStorage.FileSystem
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
         /// <exception cref="ArgumentException"></exception>
-        public async Task<IFileInfo<TFile>> UploadFileAsync(Guid fileId, TFile fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
+        public async Task<File<TFile>> UploadFileAsync(Guid fileId, TFile fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
         {
             var ext = Path.GetExtension(fileInfo.FileName);
             var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString() + "." + ext);
@@ -102,7 +102,7 @@ namespace BrandUp.FileStorage.FileSystem
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
         /// <exception cref="ArgumentException"></exception>
-        public Task<IFileInfo<TFile>> UploadFileAsync(TFile fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
+        public Task<File<TFile>> UploadFileAsync(TFile fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
             => UploadFileAsync(Guid.NewGuid(), fileInfo, fileStream, cancellationToken);
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace BrandUp.FileStorage.FileSystem
         /// <exception cref="NotFoundException"></exception>
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
-        public async Task<IFileInfo<TFile>> GetFileInfoAsync(Guid fileId, CancellationToken cancellationToken = default)
+        public async Task<File<TFile>> FindFileAsync(Guid fileId, CancellationToken cancellationToken = default)
         {
             var metadataPath = Path.Combine(folderConfiguration.MetadataPath, fileId.ToString() + ".json");
 
@@ -164,7 +164,7 @@ namespace BrandUp.FileStorage.FileSystem
         /// <exception cref="IntegrationException">Other storage exeptions</exception>
         public async Task<Stream> ReadFileAsync(Guid fileId, CancellationToken cancellationToken = default)
         {
-            var fileinfo = await GetFileInfoAsync(fileId, cancellationToken);
+            var fileinfo = await FindFileAsync(fileId, cancellationToken);
             if (fileinfo != null)
             {
                 try
@@ -200,7 +200,7 @@ namespace BrandUp.FileStorage.FileSystem
         /// <exception cref="IntegrationException"></exception>
         public async Task<bool> DeleteFileAsync(Guid fileId, CancellationToken cancellationToken = default)
         {
-            var fileInfo = await GetFileInfoAsync(fileId, cancellationToken);
+            var fileInfo = await FindFileAsync(fileId, cancellationToken);
 
             var metadataPath = Path.Combine(folderConfiguration.MetadataPath, fileId.ToString() + ".json");
 

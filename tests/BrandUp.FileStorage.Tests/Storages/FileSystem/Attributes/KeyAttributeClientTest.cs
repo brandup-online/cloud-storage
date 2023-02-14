@@ -39,8 +39,8 @@ namespace BrandUp.FileStorage.Tests.Storages.FileSystem.Attributes
 
             //Gets FakeFile metadata as AttributedFakeFile metadata and AttributedFakeFile metadata FakeFile metadata
             //Because for AwsStorage they represents equivalent metadata keys it's working.
-            var fakeFileToAttributedFakeFile = await TestGetAsync(metadata.FileId);
-            var attributedFakeFileToFakeFile = await fakeFileClient.TestGetAsync(attributedMetadata.FileId);
+            var fakeFileToAttributedFakeFile = await TestGetAsync(metadata.Id);
+            var attributedFakeFileToFakeFile = await fakeFileClient.TestGetAsync(attributedMetadata.Id);
 
             Assert.Equal(metadata.Metadata.FileName, attributedMetadata.Metadata.FileName);
             Assert.Equal(metadata.Metadata.Extension, attributedMetadata.Metadata.Ext);
@@ -50,8 +50,8 @@ namespace BrandUp.FileStorage.Tests.Storages.FileSystem.Attributes
             Assert.Equal(metadata.Metadata.FakeInner.FakeBool, attributedMetadata.Metadata.Inner.Bool);
             Assert.Equal(metadata.Metadata.FakeInner.FakeGuid, attributedMetadata.Metadata.Inner.InnerGuid);
 
-            await TestDeleteAsync(metadata.FileId);
-            await fakeFileClient.TestDeleteAsync(attributedMetadata.FileId);
+            await TestDeleteAsync(metadata.Id);
+            await fakeFileClient.TestDeleteAsync(attributedMetadata.Id);
         }
 
         #endregion
@@ -60,23 +60,23 @@ namespace BrandUp.FileStorage.Tests.Storages.FileSystem.Attributes
     public class AttributedFakeFile : IFileMetadata
     {
         public string FileName { get; set; }
-        [MetadataKey("Extension")]
+        [MetadataProperty("Extension")]
         public string Ext { get; set; }
-        [MetadataKey("fake-int")]
+        [MetadataProperty("fake-int")]
         public int Int { get; set; }
-        [MetadataKey("fake date time")]
+        [MetadataProperty("fake date time")]
         public DateTime DateTime { get; set; }
-        [MetadataKey("fake_time_Span")]
+        [MetadataProperty("fake_time_Span")]
         public TimeSpan FakeSpan { get; set; }
-        [MetadataKey("Fake_INNer")]
+        [MetadataProperty("Fake_INNer")]
         public AttributtedInnerClass Inner { get; set; }
     }
 
     public class AttributtedInnerClass
     {
-        [MetadataKey("FakeBool")]
+        [MetadataProperty("FakeBool")]
         public bool Bool { get; set; }
-        [MetadataKey("Fake      - guid")]
+        [MetadataProperty("Fake      - guid")]
         public Guid InnerGuid { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using BrandUp.FileStorage.Abstract;
+using BrandUp.FileStorage.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,14 +12,14 @@ namespace BrandUp.FileStorage
         readonly ServiceProvider rootServiceProvider;
         readonly IServiceScope serviceScope;
         readonly IConfiguration config;
-        readonly IFileStorage<T> fileStorage;
+        readonly IFileCollection<T> fileStorage;
 
         readonly protected byte[] image = Tests.Properties.Resources.Image;
 
         public IServiceProvider RootServices => rootServiceProvider;
         public IServiceProvider Services => serviceScope.ServiceProvider;
         public IConfiguration Configuration => config;
-        public IFileStorage<T> Client => fileStorage;
+        public IFileCollection<T> Client => fileStorage;
 
         public FileStorageTestBase()
         {
@@ -38,7 +39,7 @@ namespace BrandUp.FileStorage
             rootServiceProvider = services.BuildServiceProvider();
             serviceScope = rootServiceProvider.CreateScope();
 
-            fileStorage = serviceScope.ServiceProvider.GetRequiredService<IFileStorage<T>>();
+            fileStorage = serviceScope.ServiceProvider.GetRequiredService<IFileCollection<T>>();
         }
 
         static FileStorageTestBase()
@@ -54,16 +55,16 @@ namespace BrandUp.FileStorage
         {
             var fileinfo = await TestUploadAsync(metadata, stream);
 
-            var getFileinfo = await TestGetAsync(fileinfo.FileId);
+            var getFileinfo = await TestGetAsync(fileinfo.Id);
 
             Equivalent(fileinfo.Metadata, getFileinfo.Metadata);
 
-            await TestReadAsync(fileinfo.FileId, stream);
+            await TestReadAsync(fileinfo.Id, stream);
 
-            await TestDeleteAsync(fileinfo.FileId);
+            await TestDeleteAsync(fileinfo.Id);
         }
 
-        internal async Task<IFileInfo<T>> TestUploadAsync(T metadata, Stream stream)
+        internal async Task<File<T>> TestUploadAsync(T metadata, Stream stream)
         {
             var fileinfo = await Client.UploadFileAsync(metadata, stream, CancellationToken.None);
             Assert.NotNull(fileinfo);
@@ -74,11 +75,11 @@ namespace BrandUp.FileStorage
             return fileinfo;
         }
 
-        internal async Task<IFileInfo<T>> TestGetAsync(Guid id)
+        internal async Task<File<T>> TestGetAsync(Guid id)
         {
-            var getFileinfo = await Client.GetFileInfoAsync(id, CancellationToken.None);
+            var getFileinfo = await Client.FindFileAsync(id, CancellationToken.None);
             Assert.NotNull(getFileinfo);
-            Assert.Equal(getFileinfo.FileId, id);
+            Assert.Equal(getFileinfo.Id, id);
             Assert.True(getFileinfo.Size > 0);
 
             return getFileinfo;
@@ -96,7 +97,7 @@ namespace BrandUp.FileStorage
             var isDeleted = await Client.DeleteFileAsync(id, CancellationToken.None);
             Assert.True(isDeleted);
 
-            Assert.Null(await Client.GetFileInfoAsync(id, CancellationToken.None));
+            Assert.Null(await Client.FindFileAsync(id, CancellationToken.None));
         }
 
         #endregion

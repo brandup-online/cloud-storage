@@ -1,5 +1,6 @@
 ﻿using BrandUp.FileStorage.Abstract;
 using BrandUp.FileStorage.AwsS3;
+using BrandUp.FileStorage.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BrandUp.FileStorage.Tests.Storages.Aws

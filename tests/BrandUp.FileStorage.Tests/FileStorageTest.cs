@@ -14,8 +14,8 @@ namespace BrandUp.FileStorage.Tests
         [Fact]
         public void Succses_SameInstanses()
         {
-            using var storage1 = Services.GetRequiredService<IFileStorage<T>>();
-            using var storage2 = Services.GetRequiredService<IFileStorage<T>>();
+            using var storage1 = Services.GetRequiredService<IFileCollection<T>>();
+            using var storage2 = Services.GetRequiredService<IFileCollection<T>>();
 
             Assert.Same(storage1, storage2);
         }
@@ -24,10 +24,10 @@ namespace BrandUp.FileStorage.Tests
         public void Succses_DifferentScopes()
         {
             using var scope1 = Services.CreateScope();
-            using var storage1 = scope1.ServiceProvider.GetRequiredService<IFileStorage<T>>();
+            using var storage1 = scope1.ServiceProvider.GetRequiredService<IFileCollection<T>>();
 
             using var scope2 = Services.CreateScope();
-            using var storage2 = scope2.ServiceProvider.GetRequiredService<IFileStorage<T>>();
+            using var storage2 = scope2.ServiceProvider.GetRequiredService<IFileCollection<T>>();
 
             Assert.NotSame(storage1, storage2);
         }

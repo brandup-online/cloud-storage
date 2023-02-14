@@ -1,12 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace BrandUp.FileStorage.Attributes
+﻿namespace BrandUp.FileStorage.Attributes
 {
-    public class MetadataRequiredAttribute : RequiredAttribute
-    {
-        public MetadataRequiredAttribute()
-        {
-            AllowEmptyStrings = false;
-        }
-    }
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    public class MetadataRequiredAttribute : Attribute { }
 }

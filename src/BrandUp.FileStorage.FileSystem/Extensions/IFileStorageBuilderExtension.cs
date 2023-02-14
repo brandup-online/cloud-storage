@@ -1,5 +1,6 @@
 ﻿using BrandUp.FileStorage.Abstract;
 using BrandUp.FileStorage.Abstract.Configuration;
+using BrandUp.FileStorage.Builder;
 using BrandUp.FileStorage.FileSystem.Configuration;
 using Microsoft.Extensions.Configuration;
 

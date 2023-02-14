@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<TargetFramework>net7.0</TargetFramework>
+	<ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<PackageReference Include="BrandUp.MongoDB" Version="7.0.2" />
+	  <PackageReference Include="MongoDB.Driver.GridFS" Version="2.19.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<ProjectReference Include="..\BrandUp.FileStorage\BrandUp.FileStorage.csproj" />
+  </ItemGroup>
+
+</Project>

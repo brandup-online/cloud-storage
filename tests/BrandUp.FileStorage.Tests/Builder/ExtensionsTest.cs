@@ -54,11 +54,11 @@ namespace BrandUp.FileStorage.Builder
         [Fact]
         public void Success()
         {
-            var awsFakeStorage = Services.GetService<IFileStorage<FakeFile>>();
+            var awsFakeStorage = Services.GetService<IFileCollection<FakeFile>>();
             Assert.NotNull(awsFakeStorage);
-            var awsFakeStorage2 = Services.GetService<IFileStorage<AttributedFakeFile>>();
+            var awsFakeStorage2 = Services.GetService<IFileCollection<AttributedFakeFile>>();
             Assert.NotNull(awsFakeStorage2);
-            var localFakeStorage = Services.GetService<IFileStorage<Storages.FileSystem.FakeFile>>();
+            var localFakeStorage = Services.GetService<IFileCollection<Storages.FileSystem.FakeFile>>();
             Assert.NotNull(localFakeStorage);
         }
 

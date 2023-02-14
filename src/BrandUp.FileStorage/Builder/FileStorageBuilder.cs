@@ -1,121 +1,70 @@
-﻿using BrandUp.FileStorage.Abstract;
-using BrandUp.FileStorage.Abstract.Configuration;
+﻿using BrandUp.FileStorage.Internals;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace BrandUp.FileStorage.Builder
 {
-    /// <summary>
-    /// Implementation of IFileStorageBuilder
-    /// </summary>
-    public class FileStorageBuilder : IFileStorageBuilder, IFileDefinitionsContext
+    public class FileStorageBuilder : IFileStorageBuilder, IStorageProviderConfiguration
     {
-        readonly IDictionary<Type, IDictionary<string, IStorageConfiguration>> configurations; // Type is IFileStorage type
-        readonly IDictionary<Type, FileMetadataDefinition> typeDefinitions;// Type is IFileMetadata type
-
-        const string dafaultConfigurationKey = "Default";
+        readonly Dictionary<string, ProviderConfiguration> providerConfigurations = new();
 
         public FileStorageBuilder(IServiceCollection services)
         {
-            typeDefinitions = new Dictionary<Type, FileMetadataDefinition>();
-            configurations = new Dictionary<Type, IDictionary<string, IStorageConfiguration>>();
-
             Services = services ?? throw new ArgumentNullException(nameof(services));
 
-            Services.AddSingleton<IFileDefinitionsContext>(f => this);
+            AddCoreServices();
+        }
+
+        void AddCoreServices()
+        {
+            var services = Services;
+
+            services.AddSingleton<IStorageProviderConfiguration>(this); // Конфигурациия провайдеров хранения файлов
+            services.AddSingleton<StorageContextFactory>(); // Фабрика контекстов файловых хранилищ
         }
 
         #region IFileStorageBuilder members
 
-        /// <summary>
-        /// Serivice collection
-        /// </summary>
         public IServiceCollection Services { get; set; }
 
-        /// <summary>
-        /// Adds a new cofiguration for client 
-        /// </summary>
-        /// <param name="storageType">Type of storage for which added configuration</param>
-        /// <param name="configuration">Configuration object</param>
-        /// <returns>Same instance of builder</returns>
-        /// <exception cref="ArgumentException"></exception>
-        public IFileStorageBuilder AddStorage(Type storageType, IDictionary<string, IStorageConfiguration> configuration)
+        public IFileStorageBuilder AddStorageProvider<TStorageProvider, TOptions>(string configurationName, Action<TOptions> configureOptions)
+            where TStorageProvider : class, IStorageProvider
+            where TOptions : class, new()
         {
-            if (storageType == null)
-                throw new ArgumentNullException(nameof(storageType));
-            if (!storageType.IsAssignableToGenericType(typeof(IFileStorage<>)))
-                throw new ArgumentException($"{nameof(storageType)} must be assignable to {typeof(IFileStorage<>)}");
-            if (configuration == null)
-                throw new ArgumentNullException(nameof(configuration));
+            if (configurationName == null)
+                throw new ArgumentNullException(nameof(configurationName));
+            if (configureOptions == null)
+                throw new ArgumentNullException(nameof(configureOptions));
 
-            if (!configurations.TryAdd(storageType, configuration))
-                throw new ArgumentException($"Configuration for {storageType.Name} already exist");
+            var options = new TOptions();
+            configureOptions(options);
 
-            return this;
-        }
-
-        /// <summary>
-        /// Adds file type with it configuration to builder
-        /// </summary>
-        /// <typeparam name="TFile">file type to add</typeparam>
-        /// <param name="storageType">Type of storage for file</param>
-        /// <param name="configuration">Configuration for file</param>
-        /// <param name="configurationKey"></param>
-        /// <returns>Same instance of builder</returns>
-        /// <exception cref="ArgumentException">Throws if type of configuration not added to builder yet</exception>
-        public IFileStorageBuilder AddFileToStorage<TFile>(Type storageType, IStorageConfiguration configuration, string configurationKey = "") where TFile : class, IFileMetadata, new()
-        {
-            if (storageType == null)
-                throw new ArgumentNullException(nameof(storageType));
-            if (!storageType.IsAssignableToGenericType(typeof(IFileStorage<>)))
-                throw new ArgumentException($"{nameof(storageType)} must be assignable to {typeof(IFileStorage<>).Name}");
-
-            var fileType = typeof(TFile);
-            if (typeDefinitions.ContainsKey(fileType))
-                throw new InvalidOperationException($"File {fileType.Name} for {storageType.Name} already exist");
-
-            if (!configurations.TryGetValue(storageType, out var storageConfiguration))
-                throw new Exception($"Builder does not contain configuration for {storageType.Name}");
-
-            if (!storageConfiguration.TryGetValue(dafaultConfigurationKey, out var defaultConfiguration))
-                throw new Exception($"Builder does not contain default configuration for {storageType.Name}");
-
-            var fileTypeDefinition = new FileMetadataDefinition(fileType, storageType);
-            typeDefinitions.Add(fileTypeDefinition.MetadataFileType, fileTypeDefinition);
-
-            var fileConfigKey = fileType.Name; // By default file name is key for file configuration
-            if (configurationKey != string.Empty)
-                fileConfigKey = configurationKey;
-
-            if (!storageConfiguration.TryGetValue(fileConfigKey, out var fileConfig))
-            {
-                storageConfiguration.Add(fileConfigKey, configuration);
-                fileConfig = configuration;
-            }
-
-            fileTypeDefinition.AddConfiguration(defaultConfiguration, fileConfig);
-            Services.AddScoped(fileTypeDefinition.CreateStorageInstance<TFile>);
+            var providerConfiguration = new ProviderConfiguration(typeof(TStorageProvider), options);
+            providerConfigurations[configurationName] = providerConfiguration;
 
             return this;
         }
 
         #endregion
 
-        #region IFileDefinitionsDictionary members
+        #region IFileStorageProviderConfiguration members
 
-        public bool TryGetProperties(Type type, out IEnumerable<IPropertyCache> value)
+        ProviderConfiguration IStorageProviderConfiguration.Resolve(string configurationName)
         {
-            if (typeDefinitions.TryGetValue(type, out var property))
-                if (property is IEnumerable<IPropertyCache> metadataDefinition)
-                {
-                    value = metadataDefinition;
-                    return true;
-                }
+            if (!providerConfigurations.TryGetValue(configurationName, out var providerConfiguration))
+                throw new InvalidOperationException();
 
-            value = null;
-            return false;
+            return providerConfiguration;
         }
 
         #endregion
+    }
+
+    public interface IFileStorageBuilder
+    {
+        IServiceCollection Services { get; set; }
+
+        IFileStorageBuilder AddStorageProvider<TStorageProvider, TOptions>(string configurationName, Action<TOptions> configureOptions)
+            where TStorageProvider : class, IStorageProvider
+            where TOptions : class, new();
     }
 }

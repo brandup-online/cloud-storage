@@ -1,6 +1,7 @@
 ﻿using BrandUp.FileStorage.Abstract;
 using BrandUp.FileStorage.Abstract.Configuration;
 using BrandUp.FileStorage.AwsS3.Configuration;
+using BrandUp.FileStorage.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
