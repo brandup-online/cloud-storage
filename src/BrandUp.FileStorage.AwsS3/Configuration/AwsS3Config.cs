@@ -1,11 +1,9 @@
-﻿using BrandUp.FileStorage.Abstract.Configuration;
-
-namespace BrandUp.FileStorage.AwsS3.Configuration
+﻿namespace BrandUp.FileStorage.AwsS3.Configuration
 {
     /// <summary>
     /// Class for store configuration about Amazon S3 cloud storage
     /// </summary>
-    public class AwsS3Configuration : IStorageConfiguration
+    public class AwsS3Configuration
     {
         /// <summary>
         /// Url of service

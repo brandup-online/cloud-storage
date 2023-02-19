@@ -1,4 +1,6 @@
-﻿namespace BrandUp.FileStorage.Internals
+﻿using BrandUp.FileStorage.Internals.Context;
+
+namespace BrandUp.FileStorage.Internals
 {
     internal class FileCollectionImpl<TMetadata> : FileCollectionImpl, IFileCollection<TMetadata>
         where TMetadata : class, new()

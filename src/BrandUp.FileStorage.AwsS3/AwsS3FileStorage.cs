@@ -9,26 +9,20 @@ namespace BrandUp.FileStorage.AwsS3
     /// <summary>
     /// Storage for Amazon S3 cloud storage
     /// </summary>
-    /// <typeparam name="TMetadata"></typeparam>
-    public class AwsS3FileStorage<TMetadata> : IFileCollection<TMetadata>
-        where TMetadata : class, IFileMetadata, new()
+    public class AwsS3FileStorageProvider : IStorageProvider
     {
         readonly AwsS3Configuration options;
         readonly AmazonS3Client client;
-        readonly IMetadataSerializer<TMetadata> metadataSerializer;
         bool isDisposed;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="options">Amazon S3 configuration</param>
-        /// <param name="metadataSerializer">Service for serializing metadata to Amazon S3 metadata</param>
         /// <exception cref="ArgumentNullException"></exception>
-        public AwsS3FileStorage(AwsS3Configuration options, IMetadataSerializer<TMetadata> metadataSerializer)
+        public AwsS3FileStorageProvider(AwsS3Configuration options)
         {
             this.options = options ?? throw new ArgumentNullException(nameof(options));
-
-            this.metadataSerializer = metadataSerializer ?? throw new ArgumentNullException(nameof(metadataSerializer));
 
             client = new AmazonS3Client(this.options.AccessKeyId, this.options.SecretAccessKey,
                 new AmazonS3Config
@@ -43,8 +37,9 @@ namespace BrandUp.FileStorage.AwsS3
         /// <summary>
         /// Uploads file to the store with predefined id
         /// </summary>
+        /// <param name="bucketName">Id of file in storage </param>
         /// <param name="fileId">Id of file in storage </param>
-        /// <param name="fileInfo">Metadata for save</param>
+        /// <param name="metadata">Metadata for save</param>
         /// <param name="fileStream">Stream of saving file</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Information of file with metadata</returns>
@@ -52,7 +47,7 @@ namespace BrandUp.FileStorage.AwsS3
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
         /// <exception cref="ArgumentException"></exception>
-        public async Task<File<TMetadata>> UploadFileAsync(Guid fileId, TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
+        public async Task<FileInfo> UploadFileAsync(string bucketName, Guid fileId, Dictionary<string, string> metadata, Stream fileStream, CancellationToken cancellationToken = default)
         {
             using var ms = new MemoryStream();
             await fileStream.CopyToAsync(ms, cancellationToken);
@@ -66,21 +61,12 @@ namespace BrandUp.FileStorage.AwsS3
                 using var fileTransferUtility = new TransferUtility(client);
                 var transferUtilityUploadRequest = new TransferUtilityUploadRequest
                 {
-                    BucketName = options.BucketName,
+                    BucketName = bucketName,
                     Key = fileId.ToString().ToLower(),
                     InputStream = ms
                 };
 
-                var metadataDictionary = metadataSerializer.Serialize(fileInfo);
-
-                foreach (var pair in metadataDictionary)
-                    transferUtilityUploadRequest.Metadata.Add(pair.Key, pair.Value);
-
-                transferUtilityUploadRequest.WithAutoCloseStream(true);
-
-                await fileTransferUtility.UploadAsync(transferUtilityUploadRequest, cancellationToken);
-
-                return await FindFileAsync(fileId, cancellationToken);
+                return await FindFileAsync(bucketName, fileId, cancellationToken);
             }
             catch (AmazonS3Exception ex)
             {
@@ -94,38 +80,28 @@ namespace BrandUp.FileStorage.AwsS3
         }
 
         /// <summary>
-        /// Uploads file to the store
-        /// </summary>
-        /// <param name="fileInfo">Metadata for save</param>
-        /// <param name="fileStream">Stream of saving file</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>Information of file with metadata</returns>
-        /// <exception cref="InvalidOperationException"></exception>
-        /// <exception cref="AccessDeniedException"></exception>
-        /// <exception cref="IntegrationException"></exception>
-        public Task<File<TMetadata>> UploadFileAsync(TMetadata fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
-             => UploadFileAsync(Guid.NewGuid(), fileInfo, fileStream, cancellationToken);
-
-        /// <summary>
         /// Gets metadata of file
         /// </summary>
+        /// <param name="bucketName">Id of file</param>
         /// <param name="fileId">Id of file</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Information of file with metadata</returns>
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
-        public async Task<File<TMetadata>> FindFileAsync(Guid fileId, CancellationToken cancellationToken = default)
+        public async Task<FileInfo> FindFileAsync(string bucketName, Guid fileId, CancellationToken cancellationToken = default)
         {
             try
             {
                 var response = await client.GetObjectMetadataAsync(new GetObjectMetadataRequest
                 {
-                    BucketName = options.BucketName,
+                    BucketName = bucketName,
                     Key = fileId.ToString().ToLower()
 
                 }, cancellationToken);
 
-                return new FileInfo<TMetadata>() { FileId = fileId, Size = response.ContentLength, Metadata = metadataSerializer.Deserialize(fileId, response) };
+                var metadata = response.Metadata.Keys.ToDictionary(k => k, v => response.Metadata[v]);
+
+                return new FileInfo(fileId, response.ContentLength, metadata);
             }
             catch (AmazonS3Exception ex)
             {
@@ -141,19 +117,20 @@ namespace BrandUp.FileStorage.AwsS3
         /// <summary>
         /// Reads file from storage
         /// </summary>
+        /// <param name="bucketName">Id of file</param>
         /// <param name="fileId">Id of file</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>File stream</returns>
         /// <exception cref="NotFoundException">If file does not exist in storage</exception>
         /// <exception cref="AccessDeniedException">If user have not permisions to read file</exception>
         /// <exception cref="IntegrationException">Other storage exeptions</exception>
-        public async Task<Stream> ReadFileAsync(Guid fileId, CancellationToken cancellationToken = default)
+        public async Task<Stream> ReadFileAsync(string bucketName, Guid fileId, CancellationToken cancellationToken = default)
         {
             try
             {
                 var response = await client.GetObjectAsync(new GetObjectRequest
                 {
-                    BucketName = options.BucketName,
+                    BucketName = bucketName,
                     Key = fileId.ToString().ToLower()
 
                 }, cancellationToken);
@@ -173,11 +150,12 @@ namespace BrandUp.FileStorage.AwsS3
         /// <summary>
         /// Deletes file from storage
         /// </summary>
+        /// <param name="bucketName">Id of file</param>
         /// <param name="fileId">Id of file</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>true - if file deletes, false - if not</returns>
         /// <exception cref="IntegrationException"></exception>
-        public async Task<bool> DeleteFileAsync(Guid fileId, CancellationToken cancellationToken = default)
+        public async Task<bool> DeleteFileAsync(string bucketName, Guid fileId, CancellationToken cancellationToken = default)
         {
             try
             {
