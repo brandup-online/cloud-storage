@@ -1,4 +1,7 @@
-﻿namespace BrandUp.FileStorage.Builder
+﻿using BrandUp.FileStorage.Internals;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace BrandUp.FileStorage.Builder
 {
     public class FileStorageBuilder : IFileStorageBuilder, IStorageProviderConfiguration
     {
