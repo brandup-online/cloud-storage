@@ -18,15 +18,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrandUp.FileStorage.Testing", "src\BrandUp.FileStorage.Testing\BrandUp.FileStorage.Testing.csproj", "{84793B9B-037F-4D84-8EE0-015D849FFBFE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.Testing", "src\BrandUp.FileStorage.Testing\BrandUp.FileStorage.Testing.csproj", "{84793B9B-037F-4D84-8EE0-015D849FFBFE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrandUp.FileStorage.Testing.Tests", "tests\BrandUp.FileStorage.Testing.Tests\BrandUp.FileStorage.Testing.Tests.csproj", "{202F2172-D9A3-46AB-B098-DCDB5BD28B96}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.Testing.Tests", "tests\BrandUp.FileStorage.Testing.Tests\BrandUp.FileStorage.Testing.Tests.csproj", "{202F2172-D9A3-46AB-B098-DCDB5BD28B96}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrandUp.FileStorage.MongoDb", "src\BrandUp.FileStorage.MongoDb\BrandUp.FileStorage.MongoDb.csproj", "{BCA1D2E2-736F-48BF-8014-873848788AB3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.MongoDb", "src\BrandUp.FileStorage.MongoDb\BrandUp.FileStorage.MongoDb.csproj", "{BCA1D2E2-736F-48BF-8014-873848788AB3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.Abstractions", "src\BrandUp.FileStorage.Abstractions\BrandUp.FileStorage.Abstractions.csproj", "{4ADB2729-B744-4AB6-A43E-223BA89A4E73}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrandUp.FileStorage.FileSystem", "src\BrandUp.FileStorage.FileSystem\BrandUp.FileStorage.FileSystem.csproj", "{69AEDCA2-4217-4C20-81BF-EEFA4B6946D5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrandUp.FileStorage.AwsS3.Tests", "tests\BrandUp.FileStorage.AwsS3.Tests\BrandUp.FileStorage.AwsS3.Tests.csproj", "{631806E2-2AEF-422D-827C-CCA61F27CDC2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrandUp.FileStorage.FileSystem.Tests", "tests\BrandUp.FileStorage.FileStorage.Tests\BrandUp.FileStorage.FileSystem.Tests.csproj", "{9D632EEC-BC49-4E85-B708-771F4125B9E3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrandUp.FileStorage.MongoDb.Tests", "tests\BrandUp.FileStorage.MongoDb.Tests\BrandUp.FileStorage.MongoDb.Tests.csproj", "{D26D0C1F-BB37-470E-A442-E28CEAE57EE4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -66,6 +72,18 @@ Global
 		{69AEDCA2-4217-4C20-81BF-EEFA4B6946D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{69AEDCA2-4217-4C20-81BF-EEFA4B6946D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{69AEDCA2-4217-4C20-81BF-EEFA4B6946D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{631806E2-2AEF-422D-827C-CCA61F27CDC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{631806E2-2AEF-422D-827C-CCA61F27CDC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{631806E2-2AEF-422D-827C-CCA61F27CDC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{631806E2-2AEF-422D-827C-CCA61F27CDC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D632EEC-BC49-4E85-B708-771F4125B9E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D632EEC-BC49-4E85-B708-771F4125B9E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D632EEC-BC49-4E85-B708-771F4125B9E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D632EEC-BC49-4E85-B708-771F4125B9E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D26D0C1F-BB37-470E-A442-E28CEAE57EE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D26D0C1F-BB37-470E-A442-E28CEAE57EE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D26D0C1F-BB37-470E-A442-E28CEAE57EE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D26D0C1F-BB37-470E-A442-E28CEAE57EE4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -79,6 +97,9 @@ Global
 		{BCA1D2E2-736F-48BF-8014-873848788AB3} = {DE708390-4C9C-493F-AA34-F297E7EA425B}
 		{4ADB2729-B744-4AB6-A43E-223BA89A4E73} = {DE708390-4C9C-493F-AA34-F297E7EA425B}
 		{69AEDCA2-4217-4C20-81BF-EEFA4B6946D5} = {DE708390-4C9C-493F-AA34-F297E7EA425B}
+		{631806E2-2AEF-422D-827C-CCA61F27CDC2} = {5B333CFD-BF9C-480F-B69E-E608542CD316}
+		{9D632EEC-BC49-4E85-B708-771F4125B9E3} = {5B333CFD-BF9C-480F-B69E-E608542CD316}
+		{D26D0C1F-BB37-470E-A442-E28CEAE57EE4} = {5B333CFD-BF9C-480F-B69E-E608542CD316}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {34152893-6A53-4557-8E50-CE9C0C9549E1}

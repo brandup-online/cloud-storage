@@ -56,6 +56,11 @@ namespace BrandUp.FileStorage.Builder
             return providerConfiguration;
         }
 
+        public IFileStorageBuilder AddCollectionConfiguration(string collectionName, Action<string> options)
+        {
+
+        }
+
         #endregion
     }
 
@@ -66,5 +71,7 @@ namespace BrandUp.FileStorage.Builder
         IFileStorageBuilder AddStorageProvider<TStorageProvider, TOptions>(string configurationName, Action<TOptions> configureOptions)
             where TStorageProvider : class, IStorageProvider
             where TOptions : class, new();
+
+        IFileStorageBuilder AddCollectionConfiguration(string collectionName, Action<string> options);
     }
 }

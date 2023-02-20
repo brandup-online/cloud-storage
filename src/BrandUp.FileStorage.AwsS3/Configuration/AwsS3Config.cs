@@ -21,9 +21,5 @@
         /// Secret access key
         /// </summary>
         public string SecretAccessKey { get; set; }
-        /// <summary>
-        /// Name of the bucket 
-        /// </summary>
-        public string BucketName { get; set; }
     }
 }
