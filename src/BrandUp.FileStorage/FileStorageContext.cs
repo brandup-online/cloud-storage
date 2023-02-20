@@ -1,5 +1,4 @@
-﻿using BrandUp.FileStorage.Internals;
-using BrandUp.FileStorage.Internals.Context;
+﻿using BrandUp.FileStorage.Internals.Context;
 
 namespace BrandUp.FileStorage
 {
@@ -9,6 +8,7 @@ namespace BrandUp.FileStorage
     public abstract class FileStorageContext
     {
         readonly Dictionary<string, FileCollectionImpl> collections = new();
+        readonly Dictionary<string, string> bucketsDictionary;
         IStorageProvider storageProvider;
         StorageContextInfo contextInfo;
 

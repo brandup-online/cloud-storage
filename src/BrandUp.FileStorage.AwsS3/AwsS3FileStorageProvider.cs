@@ -15,6 +15,8 @@ namespace BrandUp.FileStorage.AwsS3
         readonly AmazonS3Client client;
         bool isDisposed;
 
+        const string AwsMetadataPrefix = "X-Amz-Meta";
+
         /// <summary>
         /// 
         /// </summary>
@@ -32,7 +34,7 @@ namespace BrandUp.FileStorage.AwsS3
                 });
         }
 
-        #region IFileStorage members
+        #region IStorageProvider members
 
         /// <summary>
         /// Uploads file to the store with predefined id
@@ -55,6 +57,7 @@ namespace BrandUp.FileStorage.AwsS3
 
             if (ms.Length == 0)
                 throw new InvalidOperationException("File does not contain any data");
+            var innerDictionary = metadata.ToDictionary(k => AwsMetadataPrefix + k.Key.ToTrainCase(), v => v);
 
             try
             {
@@ -99,7 +102,7 @@ namespace BrandUp.FileStorage.AwsS3
 
                 }, cancellationToken);
 
-                var metadata = response.Metadata.Keys.ToDictionary(k => k, v => response.Metadata[v]);
+                var metadata = response.Metadata.Keys.ToDictionary(k => k.Replace(AwsMetadataPrefix, "").ToPascalCase(), v => response.Metadata[v]);
 
                 return new FileInfo(fileId, response.ContentLength, metadata);
             }
@@ -161,7 +164,7 @@ namespace BrandUp.FileStorage.AwsS3
             {
                 await client.DeleteObjectAsync(new DeleteObjectRequest
                 {
-                    BucketName = options.BucketName,
+                    BucketName = bucketName,
                     Key = fileId.ToString().ToLower()
                 }, cancellationToken);
 

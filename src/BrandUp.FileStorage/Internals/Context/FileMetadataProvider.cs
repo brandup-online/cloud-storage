@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.ComponentModel;
+using System.Reflection;
 
 namespace BrandUp.FileStorage.Internals.Context
 {
@@ -33,7 +34,8 @@ namespace BrandUp.FileStorage.Internals.Context
 
             foreach (var property in metadataProperties)
             {
-                //property.SetValue(metadata, null);
+                if (input.TryGetValue(property.Name, out var value))
+                    property.SetValue(metadata, value);
             }
 
             return metadata;
@@ -41,27 +43,38 @@ namespace BrandUp.FileStorage.Internals.Context
 
         public void Serialize<TMetadata>(TMetadata metadata, IDictionary<string, string> output)
         {
+            foreach (var property in metadataProperties)
+                output.Add(property.Name, property.GetValue(metadata));
+        }
+    }
 
+    class MetadataProperty
+    {
+        readonly PropertyInfo property;
+        readonly string name;
+
+        public string Name => name;
+
+        public MetadataProperty(PropertyInfo property)
+        {
+            this.property = property;
+
+            name = property.Name;
         }
 
-        class MetadataProperty
+        public void SetValue(object metadataObject, string value)
         {
-            readonly PropertyInfo property;
-            readonly string name;
+            var converter = TypeDescriptor.GetConverter(property);
 
-            public string Name => name;
+            property.SetValue(metadataObject, converter.ConvertFromString(value));
+        }
 
-            public MetadataProperty(PropertyInfo property)
-            {
-                this.property = property;
+        public string GetValue(object metadataObject)
+        {
+            var converter = TypeDescriptor.GetConverter(property);
 
-                name = property.Name;
-            }
-
-            public void SetValue(object metadataObject, object value)
-            {
-                property.SetValue(metadataObject, value);
-            }
+            return converter.ConvertToString(property.GetValue(metadataObject, null));
         }
     }
 }
+

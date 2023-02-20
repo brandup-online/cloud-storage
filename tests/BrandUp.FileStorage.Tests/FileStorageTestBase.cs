@@ -1,36 +1,38 @@
-﻿using BrandUp.FileStorage.Abstract;
-using BrandUp.FileStorage.Builder;
+﻿using BrandUp.FileStorage.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BrandUp.FileStorage
 {
-    public abstract class FileStorageTestBase<T> : IAsyncLifetime where T : class, IFileMetadata, new()
+    public abstract class FileStorageTestBase : IAsyncLifetime
     {
         public static Guid TestGuid;
 
         readonly ServiceProvider rootServiceProvider;
         readonly IServiceScope serviceScope;
         readonly IConfiguration config;
-        readonly IFileCollection<T> fileStorage;
+        readonly TestFileContext testFileContext;
+
 
         readonly protected byte[] image = Tests.Properties.Resources.Image;
 
         public IServiceProvider RootServices => rootServiceProvider;
         public IServiceProvider Services => serviceScope.ServiceProvider;
         public IConfiguration Configuration => config;
-        public IFileCollection<T> Client => fileStorage;
 
         public FileStorageTestBase()
         {
             var services = new ServiceCollection();
             services.AddLogging();
 
-            config = new ConfigurationBuilder()
-              .AddUserSecrets(typeof(FileStorageTestBase<>).Assembly)
+            var configBuilder = new ConfigurationBuilder()
+              .AddUserSecrets(typeof(FileStorageTestBase).Assembly)
               .AddJsonFile("appsettings.test.json", true)
-              .AddEnvironmentVariables()
-              .Build();
+              .AddEnvironmentVariables();
+
+            OnConfigurationBuilding(configBuilder);
+
+            config = configBuilder.Build();
 
             var builder = services.AddFileStorage();
 
@@ -39,7 +41,7 @@ namespace BrandUp.FileStorage
             rootServiceProvider = services.BuildServiceProvider();
             serviceScope = rootServiceProvider.CreateScope();
 
-            fileStorage = serviceScope.ServiceProvider.GetRequiredService<IFileCollection<T>>();
+            testFileContext = Services.GetRequiredService<TestFileContext>();
         }
 
         static FileStorageTestBase()
@@ -47,13 +49,27 @@ namespace BrandUp.FileStorage
             TestGuid = Guid.Parse("ea3dd067-8bd8-4792-bfb0-e7be02d912e1");
         }
 
+        #region Asserts 
+
+        [Fact]
+
+        public void Init_Success()
+        {
+            Assert.NotNull(testFileContext);
+            Assert.NotNull(testFileContext.StorageProvider);
+
+            var tempFiles = testFileContext.TempFiles;
+            Assert.NotNull(tempFiles);
+        }
+
+        #endregion
+
         #region Test helpers
 
-        internal abstract T CreateMetadataValue();
 
-        protected async Task DoCRUD(T metadata, Stream stream)
+        protected async Task DoCRUD(TestFile file, Stream stream)
         {
-            var fileinfo = await TestUploadAsync(metadata, stream);
+            var fileinfo = await TestUploadAsync(file, stream);
 
             var getFileinfo = await TestGetAsync(fileinfo.Id);
 
@@ -64,20 +80,20 @@ namespace BrandUp.FileStorage
             await TestDeleteAsync(fileinfo.Id);
         }
 
-        internal async Task<File<T>> TestUploadAsync(T metadata, Stream stream)
+        internal async Task<File<TestFile>> TestUploadAsync(TestFile file, Stream stream)
         {
-            var fileinfo = await Client.UploadFileAsync(metadata, stream, CancellationToken.None);
+            var fileinfo = await testFileContext.TempFiles.UploadFileAsync(Guid.NewGuid(), file, stream, CancellationToken.None);
             Assert.NotNull(fileinfo);
-            Assert.NotEqual(fileinfo.FileId, default);
+            Assert.NotEqual(fileinfo.Id, default);
             Assert.Equal(fileinfo.Size, stream.Length);
-            Equivalent(metadata, fileinfo.Metadata);
+            Equivalent(file, fileinfo.Metadata);
 
             return fileinfo;
         }
 
-        internal async Task<File<T>> TestGetAsync(Guid id)
+        internal async Task<File<TestFile>> TestGetAsync(Guid id)
         {
-            var getFileinfo = await Client.FindFileAsync(id, CancellationToken.None);
+            var getFileinfo = await testFileContext.TempFiles.FindFileAsync(id, CancellationToken.None);
             Assert.NotNull(getFileinfo);
             Assert.Equal(getFileinfo.Id, id);
             Assert.True(getFileinfo.Size > 0);
@@ -87,17 +103,17 @@ namespace BrandUp.FileStorage
 
         internal async Task TestReadAsync(Guid id, Stream stream)
         {
-            using var downlodadedStream = await Client.ReadFileAsync(id, CancellationToken.None);
+            using var downlodadedStream = await testFileContext.TempFiles.ReadFileAsync(id, CancellationToken.None);
             Assert.NotNull(downlodadedStream);
             CompareStreams(stream, downlodadedStream);
         }
 
         internal async Task TestDeleteAsync(Guid id)
         {
-            var isDeleted = await Client.DeleteFileAsync(id, CancellationToken.None);
+            var isDeleted = await testFileContext.TempFiles.DeleteFileAsync(id, CancellationToken.None);
             Assert.True(isDeleted);
 
-            Assert.Null(await Client.FindFileAsync(id, CancellationToken.None));
+            Assert.Null(await testFileContext.TempFiles.FindFileAsync(id, CancellationToken.None));
         }
 
         #endregion
@@ -161,6 +177,7 @@ namespace BrandUp.FileStorage
 
         #region Virtual members
 
+        protected virtual void OnConfigurationBuilding(IConfigurationBuilder builder) { }
         protected virtual void OnConfigure(IServiceCollection services, IFileStorageBuilder builder) { }
         protected virtual Task OnInitializeAsync(IServiceProvider rootServices, IServiceProvider scopeServices) => Task.CompletedTask;
         protected virtual Task OnFinishAsync(IServiceProvider rootServices, IServiceProvider scopeServices) => Task.CompletedTask;
@@ -180,7 +197,6 @@ namespace BrandUp.FileStorage
 
             serviceScope.Dispose();
             await rootServiceProvider.DisposeAsync();
-            Client.Dispose();
         }
 
         #endregion

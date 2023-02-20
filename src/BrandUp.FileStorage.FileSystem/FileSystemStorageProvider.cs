@@ -1,7 +1,5 @@
-﻿using BrandUp.FileStorage.Abstract;
-using BrandUp.FileStorage.Exceptions;
+﻿using BrandUp.FileStorage.Exceptions;
 using BrandUp.FileStorage.FileSystem.Configuration;
-using BrandUp.FileStorage.FileSystem.Serialization;
 using Newtonsoft.Json;
 using System.Text;
 
@@ -10,18 +8,15 @@ namespace BrandUp.FileStorage.FileSystem
     /// <summary>
     /// Storage for local file system
     /// </summary>
-    /// <typeparam name="TFile"></typeparam>
-    public class FileSystemStorage<TFile> : IFileCollection<TFile> where TFile : class, IFileMetadata, new()
+    public class FileSystemStorageProvider : IStorageProvider
     {
         readonly FolderConfiguration folderConfiguration;
-        readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = MetadataContractResolver.Instance };
-
         /// <summary>
         /// 
         /// </summary>
         /// <param name="folderConfiguration"></param>
         /// <exception cref="ArgumentNullException"></exception>
-        public FileSystemStorage(FolderConfiguration folderConfiguration)
+        public FileSystemStorageProvider(FolderConfiguration folderConfiguration)
         {
             this.folderConfiguration = folderConfiguration ?? throw new ArgumentNullException(nameof(folderConfiguration));
 
@@ -32,13 +27,14 @@ namespace BrandUp.FileStorage.FileSystem
                 Directory.CreateDirectory(this.folderConfiguration.MetadataPath);
         }
 
-        #region IFileStorage members
+        #region IStorageProvider members
 
         /// <summary>
         /// Uploads file to the store with predefined id
         /// </summary>
+        /// <param name="bucketName">Id of file in storage </param>
         /// <param name="fileId">Id of file in storage </param>
-        /// <param name="fileInfo">Metadata for save</param>
+        /// <param name="metadata">Metadata for save</param>
         /// <param name="fileStream">Stream of saving file</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Information of file with metadata</returns>
@@ -46,10 +42,9 @@ namespace BrandUp.FileStorage.FileSystem
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
         /// <exception cref="ArgumentException"></exception>
-        public async Task<File<TFile>> UploadFileAsync(Guid fileId, TFile fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
+        public async Task<FileInfo> UploadFileAsync(string bucketName, Guid fileId, Dictionary<string, string> metadata, Stream fileStream, CancellationToken cancellationToken = default)
         {
-            var ext = Path.GetExtension(fileInfo.FileName);
-            var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString() + "." + ext);
+            var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString());
             var metadataPath = Path.Combine(folderConfiguration.MetadataPath, fileId.ToString() + ".json");
 
             if (fileStream.Length == 0)
@@ -67,9 +62,8 @@ namespace BrandUp.FileStorage.FileSystem
                 if (!File.Exists(metadataPath))
                 {
                     using var file = File.Create(metadataPath);
-                    var content = JsonConvert.SerializeObject(fileInfo, Formatting.Indented, jsonSettings);
-                    byte[] bytes = Encoding.ASCII.GetBytes(content);
-                    await file.WriteAsync(bytes, cancellationToken);
+                    var json = JsonConvert.SerializeObject(metadata);
+                    await file.WriteAsync(Encoding.ASCII.GetBytes(json), cancellationToken);
                 }
                 else throw new ArgumentException($"Metadata file with key {fileId} already exist");
             }
@@ -83,38 +77,22 @@ namespace BrandUp.FileStorage.FileSystem
             }
 
 
-            return new FileInfo<TFile>()
+            return new FileInfo(fileId, fileStream.Length, metadata)
             {
-                FileId = fileId,
-                Size = fileStream.Length,
-                Metadata = fileInfo
             };
         }
-
-        /// <summary>
-        /// Uploads file to the store
-        /// </summary>
-        /// <param name="fileInfo">Metadata for save</param>
-        /// <param name="fileStream">Stream of saving file</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>Information of file with metadata</returns>
-        /// <exception cref="InvalidOperationException"></exception>
-        /// <exception cref="AccessDeniedException"></exception>
-        /// <exception cref="IntegrationException"></exception>
-        /// <exception cref="ArgumentException"></exception>
-        public Task<File<TFile>> UploadFileAsync(TFile fileInfo, Stream fileStream, CancellationToken cancellationToken = default)
-            => UploadFileAsync(Guid.NewGuid(), fileInfo, fileStream, cancellationToken);
 
         /// <summary>
         /// Gets metadata of file
         /// </summary>
         /// <param name="fileId">Id of file</param>
+        /// <param name="bucketName">Id of file</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Information of file with metadata</returns>
         /// <exception cref="NotFoundException"></exception>
         /// <exception cref="AccessDeniedException"></exception>
         /// <exception cref="IntegrationException"></exception>
-        public async Task<File<TFile>> FindFileAsync(Guid fileId, CancellationToken cancellationToken = default)
+        public async Task<FileInfo> FindFileAsync(string bucketName, Guid fileId, CancellationToken cancellationToken = default)
         {
             var metadataPath = Path.Combine(folderConfiguration.MetadataPath, fileId.ToString() + ".json");
 
@@ -122,24 +100,14 @@ namespace BrandUp.FileStorage.FileSystem
             {
                 try
                 {
-                    using var metadata = File.OpenRead(metadataPath);
-                    using var reader = new StreamReader(metadata);
+                    using var metadataFile = File.OpenRead(metadataPath);
+                    using var reader = new StreamReader(metadataFile);
                     var json = await reader.ReadToEndAsync();
-                    var data = JsonConvert.DeserializeObject<TFile>(json, jsonSettings);
-                    if (data == null)
-                    {
-                        throw new NullReferenceException(nameof(data));
-                    }
-                    var ext = Path.GetExtension(data.FileName);
 
-                    var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString() + "." + ext);
+                    var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString());
+                    var metadata = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
 
-                    return new FileInfo<TFile>()
-                    {
-                        FileId = fileId,
-                        Size = new FileInfo(filePath).Length,
-                        Metadata = data
-                    };
+                    return new FileInfo(fileId, new System.IO.FileInfo(filePath).Length, metadata);
                 }
                 catch (UnauthorizedAccessException ex)
                 {
@@ -156,21 +124,21 @@ namespace BrandUp.FileStorage.FileSystem
         /// <summary>
         /// Reads file from storage
         /// </summary>
+        /// <param name="bucketName">Id of file</param>
         /// <param name="fileId">Id of file</param>
         /// <param name="cancellationToken">Cancellation tokSen</param>
         /// <returns>File stream</returns>
         /// <exception cref="NotFoundException">If file does not exist in storage</exception>
         /// <exception cref="AccessDeniedException">If user have not permisions to read file</exception>
         /// <exception cref="IntegrationException">Other storage exeptions</exception>
-        public async Task<Stream> ReadFileAsync(Guid fileId, CancellationToken cancellationToken = default)
+        public async Task<Stream> ReadFileAsync(string bucketName, Guid fileId, CancellationToken cancellationToken = default)
         {
-            var fileinfo = await FindFileAsync(fileId, cancellationToken);
+            var fileinfo = await FindFileAsync(bucketName, fileId, cancellationToken);
             if (fileinfo != null)
             {
                 try
                 {
-                    var ext = Path.GetExtension(fileinfo.Metadata.FileName);
-                    var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString() + "." + ext);
+                    var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString());
                     using var file = File.OpenRead(filePath);
 
                     var ms = new MemoryStream();
@@ -198,14 +166,13 @@ namespace BrandUp.FileStorage.FileSystem
         /// <returns>true - if file deletes, false - if not</returns>
         /// <exception cref="NotFoundException"></exception>
         /// <exception cref="IntegrationException"></exception>
-        public async Task<bool> DeleteFileAsync(Guid fileId, CancellationToken cancellationToken = default)
+        public async Task<bool> DeleteFileAsync(string bucketName, Guid fileId, CancellationToken cancellationToken = default)
         {
-            var fileInfo = await FindFileAsync(fileId, cancellationToken);
+            var fileInfo = await FindFileAsync(bucketName, fileId, cancellationToken);
 
             var metadataPath = Path.Combine(folderConfiguration.MetadataPath, fileId.ToString() + ".json");
 
-            var ext = Path.GetExtension(fileInfo.Metadata.FileName);
-            var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString() + "." + ext);
+            var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString());
 
             if (File.Exists(metadataPath) && File.Exists(filePath))
             {

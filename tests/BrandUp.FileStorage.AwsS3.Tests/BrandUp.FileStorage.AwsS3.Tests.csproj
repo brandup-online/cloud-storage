@@ -3,13 +3,17 @@
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
     <IsPackable>false</IsPackable>
 
-    <RootNamespace>BrandUp.FileStorage.Testing</RootNamespace>
+    <UserSecretsId>205b8f54-4cc8-499d-ad7a-2c554dca33c8</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
     <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
@@ -23,8 +27,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\BrandUp.FileStorage.Testing\BrandUp.FileStorage.Testing.csproj" />
-    <ProjectReference Include="..\BrandUp.FileStorage.Tests\BrandUp.FileStorage.Tests.csproj" />
+    <ProjectReference Include="..\..\src\BrandUp.FileStorage.AwsS3\BrandUp.FileStorage.AwsS3.csproj" />
+    <ProjectReference Include="..\BrandUp.FileStorage.Testing.Tests\BrandUp.FileStorage.Testing.Tests.csproj" />
   </ItemGroup>
 
 </Project>
