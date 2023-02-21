@@ -14,5 +14,7 @@
         /// Path to folder with matadata
         /// </summary>
         public string MetadataPath { get; set; }
+
+        public string DefaultExtension { get; set; }
     }
 }

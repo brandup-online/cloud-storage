@@ -12,7 +12,7 @@ namespace BrandUp.FileStorage
             return new FileStorageBuilder(services);
         }
 
-        public static IServiceCollection AddFileContext<TContext>(this IServiceCollection services, string configurationName)
+        public static IServiceCollection AddFileContext<TContext>(this IServiceCollection services, string configurationName, Action<ContextConfiguration> options = default)
             where TContext : FileStorageContext
         {
             if (services == null)
@@ -20,12 +20,16 @@ namespace BrandUp.FileStorage
             if (configurationName == null)
                 throw new ArgumentNullException(nameof(configurationName));
 
+            ContextConfiguration configuration = new();
+            if (options != null)
+                options(configuration);
+
             StorageContextTypes.RegisterContextType<TContext>();
 
             services.AddScoped(serviceProvider =>
             {
                 var factory = serviceProvider.GetRequiredService<StorageContextFactory>();
-                return factory.Resolve<TContext>(serviceProvider, configurationName);
+                return factory.Resolve<TContext>(serviceProvider, configurationName, configuration);
             });
 
             return services;

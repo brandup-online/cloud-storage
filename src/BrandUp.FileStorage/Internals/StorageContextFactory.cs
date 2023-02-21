@@ -1,6 +1,6 @@
-﻿using System.Collections.Concurrent;
-using BrandUp.FileStorage.Internals.Context;
+﻿using BrandUp.FileStorage.Internals.Context;
 using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Concurrent;
 
 namespace BrandUp.FileStorage.Internals
 {
@@ -16,7 +16,7 @@ namespace BrandUp.FileStorage.Internals
             providerConfiguration = rootServiceProvider.GetRequiredService<IStorageProviderConfiguration>();
         }
 
-        public TContext Resolve<TContext>(IServiceProvider serviceProvider, string configurationName)
+        public TContext Resolve<TContext>(IServiceProvider serviceProvider, string configurationName, ContextConfiguration contextConfiguration)
             where TContext : FileStorageContext
         {
             var provider = providers.GetOrAdd(configurationName, (c) =>
@@ -28,7 +28,7 @@ namespace BrandUp.FileStorage.Internals
             var contextInfo = StorageContextTypes.GetContextInfo<TContext>();
 
             var context = contextInfo.CreateInstance<TContext>(serviceProvider, provider);
-            context.Initialize(provider, contextInfo);
+            context.Initialize(provider, contextInfo, contextConfiguration);
             return context;
         }
 

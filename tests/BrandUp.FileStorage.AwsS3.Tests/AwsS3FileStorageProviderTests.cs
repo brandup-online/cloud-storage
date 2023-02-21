@@ -1,10 +1,11 @@
 using BrandUp.FileStorage.Builder;
+using BrandUp.FileStorage.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BrandUp.FileStorage.AwsS3.Tests
+namespace BrandUp.FileStorage.AwsS3
 {
-    public class AwsS3FileStorageProviderTests : FileStorageTestBase
+    public class AwsS3FileStorageProviderTests : FileStorageTests
     {
         protected override void OnConfigurationBuilding(IConfigurationBuilder builder)
         {
@@ -19,7 +20,10 @@ namespace BrandUp.FileStorage.AwsS3.Tests
                  });
 
             services
-                .AddFileContext<TestFileContext>("aws");
+                .AddFileContext<TestFileContext>("aws", options =>
+                {
+                    options.FromConfiguration(Configuration.GetSection("TestCloudStorage:FakeAwsFile"));
+                });
         }
     }
 }

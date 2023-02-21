@@ -8,23 +8,27 @@ namespace BrandUp.FileStorage
     public abstract class FileStorageContext
     {
         readonly Dictionary<string, FileCollectionImpl> collections = new();
-        readonly Dictionary<string, string> bucketsDictionary;
         IStorageProvider storageProvider;
         StorageContextInfo contextInfo;
+        ContextConfiguration contextConfiguration;
 
         public IStorageProvider StorageProvider => storageProvider;
 
-        internal void Initialize(IStorageProvider storageProvider, StorageContextInfo contextInfo)
+        internal void Initialize(IStorageProvider storageProvider, StorageContextInfo contextInfo, ContextConfiguration contextConfiguration)
         {
             this.storageProvider = storageProvider ?? throw new ArgumentNullException(nameof(storageProvider));
             this.contextInfo = contextInfo ?? throw new ArgumentNullException(nameof(contextInfo));
+            this.contextConfiguration = contextConfiguration ?? throw new ArgumentNullException(nameof(contextConfiguration));
         }
 
-        public IFileCollection<TMetadata> GetCollection<TMetadata>(string collectionName)
+        public IFileCollection<TMetadata> GetCollection<TMetadata>(string collectionKey)
             where TMetadata : class, new()
         {
-            if (collectionName == null)
-                throw new ArgumentNullException(nameof(collectionName));
+            if (collectionKey == null)
+                throw new ArgumentNullException(nameof(collectionKey));
+
+            if (!contextConfiguration.TryGetConfiguration(collectionKey, out var collectionName))
+                collectionName = collectionKey;
 
             var normalizedCollectionName = collectionName.Trim().ToLower();
 

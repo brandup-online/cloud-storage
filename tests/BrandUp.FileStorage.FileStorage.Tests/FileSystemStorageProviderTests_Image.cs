@@ -1,9 +1,9 @@
-using BrandUp.FileStorage.Builder;
+﻿using BrandUp.FileStorage.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BrandUp.FileStorage.FileSystem
 {
-    public class FileSystemStorageProviderTests : FileStorageTests
+    public class FileSystemStorageProviderTests_Image : FileStorageTests
     {
         const string TestDirectiory = "C:\\test";
 
@@ -18,17 +18,6 @@ namespace BrandUp.FileStorage.FileSystem
         protected override void OnConfigure(IServiceCollection services, IFileStorageBuilder builder)
         {
             builder
-                .AddFolderStorage("folder", options =>
-                 {
-                     options.MetadataPath = Path.Combine(TestDirectiory, "metadata");
-                     options.ContentPath = Path.Combine(TestDirectiory, "content");
-                 })
-                .AddFolderStorage("dat", options =>
-                {
-                    options.MetadataPath = Path.Combine(TestDirectiory, "metadata");
-                    options.ContentPath = Path.Combine(TestDirectiory, "content");
-                    options.DefaultExtension = "dat";
-                })
                 .AddFolderStorage("image", options =>
                 {
                     options.MetadataPath = Path.Combine(TestDirectiory, "metadata");
@@ -37,7 +26,7 @@ namespace BrandUp.FileStorage.FileSystem
                 });
 
             services
-                .AddFileContext<TestFileContext>("folder");
+                .AddFileContext<TestFileContext>("image");
         }
 
         protected override Task OnFinishAsync(IServiceProvider rootServices, IServiceProvider scopeServices)

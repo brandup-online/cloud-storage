@@ -11,6 +11,7 @@ namespace BrandUp.FileStorage.FileSystem
     public class FileSystemStorageProvider : IStorageProvider
     {
         readonly FolderConfiguration folderConfiguration;
+
         /// <summary>
         /// 
         /// </summary>
@@ -32,7 +33,7 @@ namespace BrandUp.FileStorage.FileSystem
         /// <summary>
         /// Uploads file to the store with predefined id
         /// </summary>
-        /// <param name="bucketName">Id of file in storage </param>
+        /// <param name="bucketName">Name of bucket</param>
         /// <param name="fileId">Id of file in storage </param>
         /// <param name="metadata">Metadata for save</param>
         /// <param name="fileStream">Stream of saving file</param>
@@ -44,7 +45,7 @@ namespace BrandUp.FileStorage.FileSystem
         /// <exception cref="ArgumentException"></exception>
         public async Task<FileInfo> UploadFileAsync(string bucketName, Guid fileId, Dictionary<string, string> metadata, Stream fileStream, CancellationToken cancellationToken = default)
         {
-            var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString());
+            var filePath = Path.Combine(folderConfiguration.ContentPath, string.Join('.', fileId.ToString(), folderConfiguration.DefaultExtension));
             var metadataPath = Path.Combine(folderConfiguration.MetadataPath, fileId.ToString() + ".json");
 
             if (fileStream.Length == 0)
@@ -76,17 +77,14 @@ namespace BrandUp.FileStorage.FileSystem
                 throw new IntegrationException(ex);
             }
 
-
-            return new FileInfo(fileId, fileStream.Length, metadata)
-            {
-            };
+            return new FileInfo(fileId, fileStream.Length, metadata);
         }
 
         /// <summary>
         /// Gets metadata of file
         /// </summary>
+        /// <param name="bucketName">Name of bucket</param>
         /// <param name="fileId">Id of file</param>
-        /// <param name="bucketName">Id of file</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Information of file with metadata</returns>
         /// <exception cref="NotFoundException"></exception>
@@ -104,7 +102,7 @@ namespace BrandUp.FileStorage.FileSystem
                     using var reader = new StreamReader(metadataFile);
                     var json = await reader.ReadToEndAsync();
 
-                    var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString());
+                    var filePath = Path.Combine(folderConfiguration.ContentPath, string.Join('.', fileId.ToString(), folderConfiguration.DefaultExtension));
                     var metadata = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
 
                     return new FileInfo(fileId, new System.IO.FileInfo(filePath).Length, metadata);
@@ -124,7 +122,7 @@ namespace BrandUp.FileStorage.FileSystem
         /// <summary>
         /// Reads file from storage
         /// </summary>
-        /// <param name="bucketName">Id of file</param>
+        /// <param name="bucketName">Name of bucket</param>
         /// <param name="fileId">Id of file</param>
         /// <param name="cancellationToken">Cancellation tokSen</param>
         /// <returns>File stream</returns>
@@ -138,7 +136,7 @@ namespace BrandUp.FileStorage.FileSystem
             {
                 try
                 {
-                    var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString());
+                    var filePath = Path.Combine(folderConfiguration.ContentPath, string.Join('.', fileId.ToString(), folderConfiguration.DefaultExtension));
                     using var file = File.OpenRead(filePath);
 
                     var ms = new MemoryStream();
@@ -161,6 +159,7 @@ namespace BrandUp.FileStorage.FileSystem
         /// <summary>
         /// Deletes file from storage
         /// </summary>
+        /// <param name="bucketName">Name of bucket</param>
         /// <param name="fileId">Id of file</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>true - if file deletes, false - if not</returns>
@@ -172,7 +171,7 @@ namespace BrandUp.FileStorage.FileSystem
 
             var metadataPath = Path.Combine(folderConfiguration.MetadataPath, fileId.ToString() + ".json");
 
-            var filePath = Path.Combine(folderConfiguration.ContentPath, fileId.ToString());
+            var filePath = Path.Combine(folderConfiguration.ContentPath, string.Join('.', fileId.ToString(), folderConfiguration.DefaultExtension));
 
             if (File.Exists(metadataPath) && File.Exists(filePath))
             {

@@ -1,9 +1,9 @@
 using BrandUp.FileStorage.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BrandUp.FileStorage.Testing.Tests
+namespace BrandUp.FileStorage.Testing
 {
-    public class TestFileStorageProviderTests : FileStorageTestBase
+    public class TestFileStorageProviderTests : FileStorageTests
     {
         public TestFileStorageProviderTests() { }
 

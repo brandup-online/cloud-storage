@@ -2,9 +2,9 @@ using BrandUp.FileStorage.Builder;
 using BrandUp.MongoDB;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BrandUp.FileStorage.MongoDb.Tests
+namespace BrandUp.FileStorage.MongoDb
 {
-    public class MongoStorageProviderTests : FileStorageTestBase
+    public class MongoStorageProviderTests : FileStorageTests
     {
         protected override void OnConfigure(IServiceCollection services, IFileStorageBuilder builder)
         {

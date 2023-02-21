@@ -12,6 +12,7 @@ namespace BrandUp.FileStorage.Internals
         public Type ProviderType { get; }
         public object ProviderOptions { get; }
 
+
         public ProviderConfiguration(Type provderType, object providerOptions)
         {
             ProviderType = provderType;

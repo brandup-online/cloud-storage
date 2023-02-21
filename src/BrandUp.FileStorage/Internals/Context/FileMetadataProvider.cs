@@ -64,7 +64,7 @@ namespace BrandUp.FileStorage.Internals.Context
 
         public void SetValue(object metadataObject, string value)
         {
-            var converter = TypeDescriptor.GetConverter(property);
+            var converter = TypeDescriptor.GetConverter(property.PropertyType);
 
             property.SetValue(metadataObject, converter.ConvertFromString(value));
         }

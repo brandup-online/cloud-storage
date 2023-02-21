@@ -38,6 +38,8 @@
         public async Task<File<TMetadata>> FindFileAsync(Guid fileId, CancellationToken cancellationToken = default)
         {
             var fileInfo = await storageProvider.FindFileAsync(collectionName, fileId, cancellationToken);
+            if (fileInfo == null)
+                return null;
 
             var metadata = metadataProvider.Deserialize<TMetadata>(fileInfo.Metadata);
 

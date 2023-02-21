@@ -57,7 +57,7 @@ namespace BrandUp.FileStorage.AwsS3
 
             if (ms.Length == 0)
                 throw new InvalidOperationException("File does not contain any data");
-            var innerDictionary = metadata.ToDictionary(k => AwsMetadataPrefix + k.Key.ToTrainCase(), v => v);
+            var innerDictionary = metadata.ToDictionary(k => k.Key.ToTrainCase(), v => v.Value);
 
             try
             {
@@ -68,6 +68,11 @@ namespace BrandUp.FileStorage.AwsS3
                     Key = fileId.ToString().ToLower(),
                     InputStream = ms
                 };
+
+                foreach (var pair in innerDictionary)
+                    transferUtilityUploadRequest.Metadata.Add(pair.Key, pair.Value);
+
+                await fileTransferUtility.UploadAsync(transferUtilityUploadRequest, cancellationToken);
 
                 return await FindFileAsync(bucketName, fileId, cancellationToken);
             }

@@ -51,7 +51,7 @@ namespace BrandUp.FileStorage.Builder
         ProviderConfiguration IStorageProviderConfiguration.Resolve(string configurationName)
         {
             if (!providerConfigurations.TryGetValue(configurationName, out var providerConfiguration))
-                throw new InvalidOperationException();
+                throw new InvalidOperationException("Configuration provider not found.");
 
             return providerConfiguration;
         }

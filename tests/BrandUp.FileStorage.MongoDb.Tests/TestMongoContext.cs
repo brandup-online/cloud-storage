@@ -1,6 +1,6 @@
 ﻿using BrandUp.MongoDB;
 
-namespace BrandUp.FileStorage.MongoDb.Tests
+namespace BrandUp.FileStorage.MongoDb
 {
 
     public class TestMongoContext : MongoDbContext
