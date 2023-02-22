@@ -6,6 +6,7 @@ namespace BrandUp.FileStorage
     {
         readonly protected byte[] image = Tests.Properties.Resources.Image;
         readonly protected TestFileContext testFileContext;
+        protected IStorageProvider fileStorage;
 
         public FileStorageTests()
         {
@@ -14,6 +15,9 @@ namespace BrandUp.FileStorage
 
         #region Tests 
 
+        /// <summary>
+        /// Test cheks correct work of storage builder, and context initializer.
+        /// </summary>
         [Fact]
 
         public void Init_Success()
@@ -25,8 +29,11 @@ namespace BrandUp.FileStorage
             Assert.NotNull(tempFiles);
         }
 
+        /// <summary>
+        /// CRUD operations for storage.
+        /// </summary>
         [Fact]
-        public async Task CRUD_Success()
+        public async void CRUD_Success()
         {
             TestFile file = new()
             {
