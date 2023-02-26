@@ -30,6 +30,9 @@ namespace BrandUp.FileStorage
 
         #region Tests 
 
+        /// <summary>
+        /// Test cheks correct work of storage builder, and context initializer.
+        /// </summary>
         [Fact]
 
         public void Init_Success()
@@ -41,8 +44,11 @@ namespace BrandUp.FileStorage
             Assert.NotNull(tempFiles);
         }
 
+        /// <summary>
+        /// CRUD operations for storage.
+        /// </summary>
         [Fact]
-        public async Task CRUD_Success()
+        public async void CRUD_Success()
         {
             #region Preparation 
 
