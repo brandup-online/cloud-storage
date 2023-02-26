@@ -1,10 +1,11 @@
-﻿using BrandUp.FileStorage.Tests;
+﻿using BrandUp.FileStorage.Attributes;
 
 namespace BrandUp.FileStorage
 {
-    public class TestFileContext : FileStorageContext, ITestContext
+    public class TestFileContext : FileStorageContext
     {
         public IFileCollection<TestFile> FileStorageTestFiles => GetCollection<TestFile>("TempFiles");
+        public IFileCollection<AttributedTestFile> AttributedTestFiles => GetCollection<AttributedTestFile>("TempFiles");
     }
 
     public class TestFile
@@ -13,5 +14,18 @@ namespace BrandUp.FileStorage
         public Guid Id { get; set; }
         public int Size { get; set; }
         public DateTime CreatedDate { get; set; }
+    }
+
+    public class AttributedTestFile
+    {
+        [MetadataRequired]
+        public string FileName { get; set; }
+        [MetadataProperty(Name = "Id")]
+        public Guid MailingId { get; set; }
+        public int Size { get; set; }
+        public DateTime CreatedDate { get; set; }
+
+        [MetadataIgnore]
+        public string Ignore { get; set; }
     }
 }

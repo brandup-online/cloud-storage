@@ -18,8 +18,8 @@ namespace BrandUp.FileStorage.Builder
         {
             var services = Services;
 
-            services.AddSingleton<IStorageProviderConfiguration>(this); // Конфигурациия провайдеров хранения файлов
-            services.AddSingleton<StorageContextFactory>(); // Фабрика контекстов файловых хранилищ
+            services.AddSingleton<IStorageProviderConfiguration>(this); // Configuration of file store providers.
+            services.AddSingleton<StorageContextFactory>(); // File stores contexts factory.
         }
 
         #region IFileStorageBuilder members
@@ -71,7 +71,5 @@ namespace BrandUp.FileStorage.Builder
         IFileStorageBuilder AddStorageProvider<TStorageProvider, TOptions>(string configurationName, Action<TOptions> configureOptions)
             where TStorageProvider : class, IStorageProvider
             where TOptions : class, new();
-
-        //IFileStorageBuilder AddCollectionConfiguration(string collectionName, Action<string> options);
     }
 }

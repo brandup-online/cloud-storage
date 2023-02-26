@@ -1,11 +1,27 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using BrandUp.FileStorage.Builder;
+using BrandUp.FileStorage.Exceptions;
+using BrandUp.FileStorage.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BrandUp.FileStorage
 {
-    public abstract class FileStorageTests : FileStorageTestBase
+    public class FileStorageTests : FileStorageTestBase
     {
-        readonly protected byte[] image = Tests.Properties.Resources.Image;
-        readonly protected TestFileContext testFileContext;
+        readonly TestFileContext testFileContext;
+
+        #region FileStorageTestBase members
+        protected override void OnConfigure(IServiceCollection services, IFileStorageBuilder builder)
+        {
+            builder.AddTestProvider("test", options =>
+            {
+                options.MaxFilesByBucket = 10;
+                options.MaxFileSize = 100;
+            });
+
+            services
+                .AddFileContext<TestFileContext>("test");
+        }
+        #endregion
 
         public FileStorageTests()
         {
@@ -28,6 +44,10 @@ namespace BrandUp.FileStorage
         [Fact]
         public async Task CRUD_Success()
         {
+            #region Preparation 
+
+            var collection = testFileContext.FileStorageTestFiles;
+
             TestFile file = new()
             {
                 FileName = "Test",
@@ -36,116 +56,69 @@ namespace BrandUp.FileStorage
                 CreatedDate = DateTime.UtcNow.Date,
             };
 
-            using MemoryStream ms = new(image);
+            using MemoryStream stream = new(image);
 
-            await CRUDAsync(file, ms);
+            #endregion
+
+            var fileinfo = await TestUploadAsync(collection, file, stream);
+            EqualsAssert(file, fileinfo.Metadata);
+
+            var getFileinfo = await TestGetAsync(collection, fileinfo.Id);
+            EqualsAssert(file, getFileinfo.Metadata);
+
+            await TestReadAsync(collection, fileinfo.Id, stream);
+
+            await TestDeleteAsync(collection, fileinfo.Id);
+        }
+
+        [Fact]
+        public async Task Attributes_Ignore()
+        {
+            var collection = testFileContext.AttributedTestFiles;
+            AttributedTestFile file = new()
+            {
+                FileName = "Test",
+                Size = 100,
+                MailingId = Guid.NewGuid(),
+                CreatedDate = DateTime.UtcNow.Date,
+                Ignore = "232"
+            };
+
+            using MemoryStream stream = new(image);
+
+            var uploaded = await TestUploadAsync(collection, file, stream);
+            var fileinfo = await TestGetAsync(collection, uploaded.Id);
+            Assert.Null(fileinfo.Metadata.Ignore);
+        }
+
+        [Fact]
+        public async Task Attributes_Required()
+        {
+            #region Preparation
+
+            var collection = testFileContext.AttributedTestFiles;
+            AttributedTestFile file = new()
+            {
+                FileName = null,
+                Size = 100,
+                MailingId = Guid.NewGuid(),
+                CreatedDate = DateTime.UtcNow.Date,
+                Ignore = "232"
+            };
+
+            using MemoryStream stream = new(image);
+
+            #endregion
+
+            await Assert.ThrowsAsync<PropertyRequiredException>(async () =>
+            {
+                var fileinfo = await TestUploadAsync(collection, file, stream);
+                Assert.Null(fileinfo.Metadata.Ignore);
+            });
         }
 
         #endregion
 
-        #region Helpers
 
-        protected async Task CRUDAsync(TestFile file, Stream stream)
-        {
-            var fileinfo = await TestUploadAsync(file, stream);
-
-            var getFileinfo = await TestGetAsync(fileinfo.Id);
-
-            Equals(fileinfo.Metadata, getFileinfo.Metadata);
-
-            await TestReadAsync(fileinfo.Id, stream);
-
-            await TestDeleteAsync(fileinfo.Id);
-        }
-
-        protected async Task<File<TestFile>> TestUploadAsync(TestFile file, Stream stream)
-        {
-            var id = Guid.NewGuid();
-            var fileinfo = await testFileContext.FileStorageTestFiles.UploadFileAsync(id, file, stream, CancellationToken.None);
-            Assert.NotNull(fileinfo);
-            Assert.Equal(fileinfo.Id, id);
-            Assert.Equal(fileinfo.Size, stream.Length);
-            Equals(file, fileinfo.Metadata);
-
-            return fileinfo;
-        }
-
-        protected async Task<File<TestFile>> TestGetAsync(Guid id)
-        {
-            var getFileinfo = await testFileContext.FileStorageTestFiles.FindFileAsync(id, CancellationToken.None);
-            Assert.NotNull(getFileinfo);
-            Assert.Equal(getFileinfo.Id, id);
-            Assert.True(getFileinfo.Size > 0);
-
-            return getFileinfo;
-        }
-
-        protected async Task TestReadAsync(Guid id, Stream stream)
-        {
-            using var downlodadedStream = await testFileContext.FileStorageTestFiles.ReadFileAsync(id, CancellationToken.None);
-            Assert.NotNull(downlodadedStream);
-            CompareStreams(stream, downlodadedStream);
-        }
-
-        protected async Task TestDeleteAsync(Guid id)
-        {
-            var isDeleted = await testFileContext.FileStorageTestFiles.DeleteFileAsync(id, CancellationToken.None);
-            Assert.True(isDeleted);
-
-            Assert.Null(await testFileContext.FileStorageTestFiles.FindFileAsync(id, CancellationToken.None));
-        }
-
-        #endregion
-
-        #region Utils helpers
-
-        void Equals(TestFile first, TestFile second)
-        {
-            Assert.NotNull(first);
-            Assert.NotNull(second);
-
-            Assert.Equal(first.FileName, second.FileName);
-            Assert.Equal(first.Id, second.Id);
-            Assert.Equal(first.Size, second.Size);
-            Assert.Equal(first.CreatedDate, second.CreatedDate);
-        }
-
-        void CompareStreams(Stream expected, Stream actual)
-        {
-            Stream assertStream = null;
-            using var ms = new MemoryStream();
-            try
-            {
-                actual.Seek(0, SeekOrigin.Begin);
-                assertStream = actual;
-            }
-            catch
-            {
-                actual.CopyTo(ms);
-                assertStream = ms;
-                assertStream.Seek(0, SeekOrigin.Begin);
-            }
-            expected.Seek(0, SeekOrigin.Begin);
-
-            Assert.Equal(expected.Length, actual.Length);
-
-            var bytesToRead = sizeof(long);
-
-            byte[] one = new byte[bytesToRead];
-            byte[] two = new byte[bytesToRead];
-
-            int iterations = (int)Math.Ceiling((double)expected.Length / bytesToRead);
-
-            for (int i = 0; i < iterations; i++)
-            {
-                expected.Read(one, 0, bytesToRead);
-                assertStream.Read(two, 0, bytesToRead);
-
-                Assert.Equal(BitConverter.ToInt64(one, 0), BitConverter.ToInt64(two, 0));
-            }
-
-        }
-
-        #endregion
     }
 }

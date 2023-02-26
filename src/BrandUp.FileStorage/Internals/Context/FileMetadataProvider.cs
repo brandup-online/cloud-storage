@@ -1,4 +1,6 @@
-﻿using System.ComponentModel;
+﻿using BrandUp.FileStorage.Attributes;
+using BrandUp.FileStorage.Exceptions;
+using System.ComponentModel;
 using System.Reflection;
 
 namespace BrandUp.FileStorage.Internals.Context
@@ -34,7 +36,7 @@ namespace BrandUp.FileStorage.Internals.Context
 
             foreach (var property in metadataProperties)
             {
-                if (input.TryGetValue(property.Name, out var value))
+                if (input.TryGetValue(property.Name, out var value) && !property.IsIgnore)
                     property.SetValue(metadata, value);
             }
 
@@ -44,7 +46,10 @@ namespace BrandUp.FileStorage.Internals.Context
         public void Serialize<TMetadata>(TMetadata metadata, IDictionary<string, string> output)
         {
             foreach (var property in metadataProperties)
-                output.Add(property.Name, property.GetValue(metadata));
+            {
+                if (!property.IsIgnore)
+                    output.Add(property.Name, property.GetValue(metadata));
+            }
         }
     }
 
@@ -52,14 +57,40 @@ namespace BrandUp.FileStorage.Internals.Context
     {
         readonly PropertyInfo property;
         readonly string name;
+        readonly bool isIgnore;
+        readonly bool isRequired;
 
         public string Name => name;
+        public bool IsIgnore => isIgnore;
 
         public MetadataProperty(PropertyInfo property)
         {
             this.property = property;
 
-            name = property.Name;
+            name = GetPropertyName(property);
+
+            var ignoreAttribute = Attribute.GetCustomAttribute(property, typeof(MetadataIgnoreAttribute));
+            if (ignoreAttribute != null)
+                isIgnore = true;
+            else
+                isIgnore = false;
+
+            var requiredAttribute = Attribute.GetCustomAttribute(property, typeof(MetadataRequiredAttribute));
+            if (requiredAttribute != null)
+                isRequired = true;
+            else
+                isRequired = false;
+        }
+
+        public string GetValue(object metadataObject)
+        {
+            var converter = TypeDescriptor.GetConverter(property);
+
+            var value = property.GetValue(metadataObject, null);
+            if (value == null && isRequired)
+                throw new PropertyRequiredException(nameof(value));
+
+            return converter.ConvertToString(value);
         }
 
         public void SetValue(object metadataObject, string value)
@@ -69,12 +100,15 @@ namespace BrandUp.FileStorage.Internals.Context
             property.SetValue(metadataObject, converter.ConvertFromString(value));
         }
 
-        public string GetValue(object metadataObject)
+        string GetPropertyName(PropertyInfo property)
         {
-            var converter = TypeDescriptor.GetConverter(property);
+            var propertyAttribute = (MetadataPropertyAttribute)Attribute.GetCustomAttribute(property, typeof(MetadataPropertyAttribute));
+            if (propertyAttribute != null)
+                return propertyAttribute.Name;
 
-            return converter.ConvertToString(property.GetValue(metadataObject, null));
+            return property.Name;
         }
     }
 }
+
 

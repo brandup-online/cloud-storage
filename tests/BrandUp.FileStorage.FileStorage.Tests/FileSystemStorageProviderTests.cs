@@ -3,9 +3,16 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BrandUp.FileStorage.FileSystem
 {
-    public class FileSystemStorageProviderTests : FileStorageTests
+    public class FileSystemStorageProviderTests : FileStorageTestBase
     {
         const string TestDirectiory = "C:\\test";
+
+        readonly TestFileContext testFileContext;
+
+        public FileSystemStorageProviderTests()
+        {
+            testFileContext = Services.GetRequiredService<TestFileContext>();
+        }
 
         #region FileStorageTestBase members
 
@@ -47,5 +54,27 @@ namespace BrandUp.FileStorage.FileSystem
         }
 
         #endregion
+
+        [Fact]
+        public async Task Succsess_CRUD()
+        {
+            #region Preparation 
+
+            var collection = testFileContext.FileStorageTestFiles;
+
+            TestFile file = new()
+            {
+                FileName = "Test",
+                Size = 100,
+                Id = Guid.NewGuid(),
+                CreatedDate = DateTime.UtcNow.Date,
+            };
+
+            using MemoryStream stream = new(image);
+
+            #endregion
+
+            await CRUD(collection, file, stream);
+        }
     }
 }
