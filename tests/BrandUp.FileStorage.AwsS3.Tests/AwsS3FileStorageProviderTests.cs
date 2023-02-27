@@ -7,10 +7,12 @@ namespace BrandUp.FileStorage.AwsS3
     public class AwsS3FileStorageProviderTests : FileStorageTestBase
     {
         readonly TestFileContext testFileContext;
+        readonly AttributedsTestFileContext attributedTestFileContext;
 
         public AwsS3FileStorageProviderTests()
         {
             testFileContext = Services.GetRequiredService<TestFileContext>();
+            attributedTestFileContext = Services.GetRequiredService<AttributedsTestFileContext>();
         }
 
         #region FileStorageTestBase members
@@ -27,10 +29,15 @@ namespace BrandUp.FileStorage.AwsS3
                      Configuration.GetSection("TestCloudStorage:Default").Bind(options);
                  });
 
+            var tempFiles = Configuration.GetSection("TestCloudStorage:FakeAwsFile");
             services
                 .AddFileContext<TestFileContext>("aws", options =>
                 {
-                    options.FromConfiguration(Configuration.GetSection("TestCloudStorage:FakeAwsFile"));
+                    options.FromConfiguration(tempFiles);
+                })
+                .AddFileContext<AttributedsTestFileContext>("aws", options =>
+                {
+                    options.FromConfiguration(tempFiles);
                 });
         }
 
@@ -64,7 +71,7 @@ namespace BrandUp.FileStorage.AwsS3
             #region Preparation 
 
             var collection = testFileContext.FileStorageTestFiles;
-            var attrbutedCollection = testFileContext.AttributedTestFiles;
+            var attrbutedCollection = attributedTestFileContext.AttributedTestFiles;
 
             TestFile file = new()
             {

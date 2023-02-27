@@ -47,7 +47,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\BrandUp.FileStorage.AwsS3\BrandUp.FileStorage.AwsS3.csproj" />
-    <ProjectReference Include="..\..\src\BrandUp.FileStorage.Testing\BrandUp.FileStorage.Testing.csproj" />
+    <ProjectReference Include="..\BrandUp.FileStorage.Testing\BrandUp.FileStorage.Testing.csproj" />
   </ItemGroup>
 
   <ItemGroup>

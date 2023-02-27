@@ -5,15 +5,19 @@ namespace BrandUp.FileStorage
     public class TestFileContext : FileStorageContext
     {
         public IFileCollection<TestFile> FileStorageTestFiles => GetCollection<TestFile>("TempFiles");
-        public IFileCollection<AttributedTestFile> AttributedTestFiles => GetCollection<AttributedTestFile>("TempFiles");
-    }
 
+    }
     public class TestFile
     {
         public string FileName { get; set; }
         public Guid Id { get; set; }
         public int Size { get; set; }
         public DateTime CreatedDate { get; set; }
+    }
+
+    public class AttributedsTestFileContext : FileStorageContext
+    {
+        public IFileCollection<AttributedTestFile> AttributedTestFiles => GetCollection<AttributedTestFile>("TempFiles");
     }
 
     public class AttributedTestFile

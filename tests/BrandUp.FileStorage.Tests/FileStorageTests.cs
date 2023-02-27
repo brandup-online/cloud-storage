@@ -8,6 +8,7 @@ namespace BrandUp.FileStorage
     public class FileStorageTests : FileStorageTestBase
     {
         readonly TestFileContext testFileContext;
+        readonly AttributedsTestFileContext attributedTestFileContext;
 
         #region FileStorageTestBase members
         protected override void OnConfigure(IServiceCollection services, IFileStorageBuilder builder)
@@ -19,13 +20,15 @@ namespace BrandUp.FileStorage
             });
 
             services
-                .AddFileContext<TestFileContext>("test");
+                .AddFileContext<TestFileContext>("test")
+                .AddFileContext<AttributedsTestFileContext>("test");
         }
         #endregion
 
         public FileStorageTests()
         {
             testFileContext = Services.GetRequiredService<TestFileContext>();
+            attributedTestFileContext = Services.GetRequiredService<AttributedsTestFileContext>();
         }
 
         #region Tests 
@@ -80,7 +83,7 @@ namespace BrandUp.FileStorage
         [Fact]
         public async Task Attributes_Ignore()
         {
-            var collection = testFileContext.AttributedTestFiles;
+            var collection = attributedTestFileContext.AttributedTestFiles;
             AttributedTestFile file = new()
             {
                 FileName = "Test",
@@ -102,7 +105,7 @@ namespace BrandUp.FileStorage
         {
             #region Preparation
 
-            var collection = testFileContext.AttributedTestFiles;
+            var collection = attributedTestFileContext.AttributedTestFiles;
             AttributedTestFile file = new()
             {
                 FileName = null,

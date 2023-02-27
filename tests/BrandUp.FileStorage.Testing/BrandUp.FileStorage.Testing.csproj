@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BrandUp.FileStorage\BrandUp.FileStorage.csproj" />
+    <ProjectReference Include="..\..\src\BrandUp.FileStorage\BrandUp.FileStorage.csproj" />
   </ItemGroup>
 
 </Project>
