@@ -1,4 +1,5 @@
-﻿using BrandUp.FileStorage.Builder;
+﻿using BrandUp.FileStorage.Attributes;
+using BrandUp.FileStorage.Builder;
 using BrandUp.FileStorage.Exceptions;
 using BrandUp.FileStorage.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -80,6 +81,9 @@ namespace BrandUp.FileStorage
             await TestDeleteAsync(collection, fileinfo.Id);
         }
 
+        /// <summary>
+        /// Test check correct work of <see cref="MetadataIgnoreAttribute"/> 
+        /// </summary>
         [Fact]
         public async Task Attributes_Ignore()
         {
@@ -100,6 +104,10 @@ namespace BrandUp.FileStorage
             Assert.Null(fileinfo.Metadata.Ignore);
         }
 
+
+        /// <summary>
+        /// Test check correct work of <see cref="MetadataRequiredAttribute"/> 
+        /// </summary>
         [Fact]
         public async Task Attributes_Required()
         {

@@ -1,3 +1,4 @@
+using BrandUp.FileStorage.Attributes;
 using BrandUp.FileStorage.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,6 +44,9 @@ namespace BrandUp.FileStorage.AwsS3
 
         #endregion
 
+        /// <summary>
+        /// CRUD operations for storage.
+        /// </summary>
         [Fact]
         public async Task Succsess_CRUD()
         {
@@ -65,6 +69,9 @@ namespace BrandUp.FileStorage.AwsS3
             await CRUD(collection, file, stream);
         }
 
+        /// <summary>
+        /// Test check correct work of <see cref="MetadataRequiredAttribute"/> 
+        /// </summary>
         [Fact]
         public async Task Success_Attributes()
         {
